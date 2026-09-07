@@ -7,21 +7,24 @@ dependency.
 
 ## Wiring for this milestone
 
-Power the Tab5 and YD-ESP32-23 separately over USB. Connect only:
+Power the Tab5 and YD-ESP32-23 separately over USB. Connect the internal I2C
+bus through M5-Bus:
 
-| Tab5 Port A | RF-board mock |
+| Tab5 M5-Bus | RF-board mock |
 | --- | --- |
-| Black / GND | GND |
-| Yellow / GPIO53 / SDA | GPIO8 / SDA |
-| White / GPIO54 / SCL | GPIO9 / SCL |
-| Red / 5 V | **Not connected** |
+| Pin 1 or pin 3 / GND | GND |
+| Pin 17 / GPIO31 / SDA | GPIO8 / SDA |
+| Pin 18 / GPIO32 / SCL | GPIO9 / SCL |
 
-The Tab5 is the I2C master on Port A: SDA is GPIO53 and SCL is GPIO54. The
-default bus speed is 100 kHz and its weak internal pull-ups are enabled for the
-short bring-up jumpers. Use proper external pull-ups on the production
-daughter board.
+The Tab5 is the I2C master on its internal system bus at 100 kHz. Onboard
+R76/R93 already pull SCL/SDA up to 3.3 V through 2.2 kOhm, so the weak internal
+pull-ups are disabled on both boards. Address `0x60` is separate from the
+Tab5's onboard peripherals. This standalone firmware owns the bus; future
+GUI integration must share the existing bus handle with the board drivers.
+ESP-IDF may print a generic pull-up warning when internal pull-ups are
+disabled; that warning does not measure or detect the onboard resistors.
 
-For the I2S test, add the M5-Bus wiring below while retaining Port A I2C:
+For the I2S test, add the following M5-Bus wiring:
 
 | Signal | Tab5 M5-Bus / GPIO | Direction | YD mock |
 | --- | --- | --- | --- |
@@ -35,6 +38,14 @@ Power each board only from its own USB connection. Do not join 5 V or 3.3 V.
 Keep jumpers short; optional 22–47 ohm source-series resistors can be fitted at
 the Tab5 end of its three clock outputs and at YD GPIO7 for DOUT.
 
+For the previous Port A setup, move SDA to yellow GPIO53, SCL to white GPIO54,
+and GND to black; leave red 5 V disconnected. In `idf.py menuconfig`, set
+`CONFIG_DXFT8_TAB5_I2C_SDA_GPIO=53`,
+`CONFIG_DXFT8_TAB5_I2C_SCL_GPIO=54`, and enable
+`CONFIG_DXFT8_TAB5_I2C_INTERNAL_PULLUPS` for short bench jumpers unless external
+pull-ups to 3.3 V are fitted. The YD remains on GPIO8/GPIO9 with its weak
+pull-ups disabled.
+
 ## Build and run
 
 ```sh
@@ -45,9 +56,24 @@ idf.py build
 idf.py -p /dev/cu.usbmodem101 flash monitor
 ```
 
+After flashing both boards, close serial monitors and run the automated
+capture from the repository root:
+
+```sh
+cd ~/tab5_dxft8
+python tools/bench_validate.py --mock /dev/cu.usbmodem5A7A0113341 --tab5 /dev/cu.usbmodem101 --runs 3
+```
+
+The runner resets the mock once and the Tab5 for each run, streaming both
+logs to the console. It requires Si5351 and I2S success messages on the
+internal I2C pins, independent Si5351 and MCLK checks by the mock, and
+clock-loss detection after shutdown. Initial USB-open startup failures and
+delayed mock validation errors also fail the runner.
+
 The deterministic startup test:
 
-1. Probes address `0x60` and reads status registers 0 and 1.
+1. Probes address `0x60` for up to two seconds to allow board startup, then
+   reads status registers 0 and 1.
 2. Disables every output with Si5351 register 3 = `0xFF`, powers down the
    output drivers, and applies the configured XA reference mode.
 3. Programs the actual 40 m plan for RF 7.074 MHz: PLLA/B at 792.288 MHz,
@@ -61,7 +87,9 @@ The deterministic startup test:
    running while CLK0 is added for the PA clock.
 7. Starts I2S1 as a 48 kHz master receiver, generating 12.288 MHz MCLK,
    3.072 MHz BCLK, and 48 kHz LRCK.
-8. In the default mock mode, validates 4,800 continuous stereo frames for
+8. In the default mock mode, discards 4,800 startup frames to clear both DMA
+   rings, an in-flight mock write, and MCLK qualification transitions across
+   host-only resets. It then validates 4,800 continuous stereo frames for
    channel order, Philips-I2S timing/alignment, zero padding, and sequence.
 9. Releases I2S (including MCLK/APLL) and finishes in RX with CLK1 enabled and
    CLK0 disabled.
@@ -71,7 +99,7 @@ UART log. Register 3 output enables are active-low: `0xFF` disables all
 outputs, `0xFD` enables CLK1 only, and `0xFC` enables CLK0 and CLK1. These are
 clock states, not complete RF-path states. The daughter board's separate G47
 and G48 controls perform the actual complementary RX/TX switching; exercising
-those GPIOs is outside this I2C-only milestone.
+those GPIOs is outside these I2C/I2S tests.
 
 For a mock-board acceptance run, enable
 `CONFIG_DXFT8_RUN_TX_PATH_SELF_TEST` with `idf.py menuconfig`. Its default is

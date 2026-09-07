@@ -1,0 +1,1167 @@
+[   0.038 mock] ESP-ROM:esp32s3-20210327
+[   0.038 mock] Build:Mar 27 2021
+[   0.044 mock] rst:0x1 (POWERON),boot:0x28 (SPI_FAST_FLASH_BOOT)
+[   0.044 mock] SPIWP:0xee
+[   0.044 mock] mode:DIO, clock div:1
+[   0.044 tab5] Core0 Saved PC:0x40007176
+[   0.044 tab5] Core1 Saved PC:0x4ff02e9a
+[   0.044 tab5] SPI mode:DIO, clock div:1
+[   0.051 mock] load:0x3fce2820,len:0x158c
+[   0.051 mock] load:0x403c8700,len:0xd24
+[   0.051 mock] load:0x403cb700,len:0x2f34
+[   0.051 mock] entry 0x403c8924
+[   0.051 tab5] load:0x4ff33ce0,len:0x17a4
+[   0.051 tab5] load:0x4ff29ed0,len:0xfc0
+[   0.051 tab5] load:0x4ff2cbd0,len:0x345c
+[   0.057 mock] I (24) boot: ESP-IDF v5.5.1 2nd stage bootloader
+[   0.057 tab5] entry 0x4ff29eda
+[   0.063 mock] I (25) boot: compile time Sep  4 2026 07:27:34
+[   0.069 mock] I (25) boot: Multicore bootloader
+[   0.069 mock] I (25) boot: chip revision: v0.2
+[   0.069 tab5] I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+[   0.069 tab5] I (28) boot: compile time Sep  4 2026 07:27:37
+[   0.069 tab5] I (28) boot: Multicore bootloader
+[   0.069 tab5] I (29) boot: chip revision: v1.3
+[   0.075 mock] I (28) boot: efuse block revision: v1.3
+[   0.075 mock] I (31) boot.esp32s3: Boot SPI Speed : 80MHz
+[   0.075 tab5] I (31) boot: efuse block revision: v0.3
+[   0.082 mock] I (35) boot.esp32s3: SPI Mode       : DIO
+[   0.082 mock] I (39) boot.esp32s3: SPI Flash Size : 16MB
+[   0.082 tab5] I (34) qio_mode: Enabling default flash chip QIO
+[   0.082 tab5] I (39) boot.esp32p4: SPI Speed      : 80MHz
+[   0.088 mock] I (43) boot: Enabling RNG early entropy source...
+[   0.088 mock] I (47) boot: Partition Table:
+[   0.088 tab5] I (42) boot.esp32p4: SPI Mode       : QIO
+[   0.088 tab5] I (46) boot.esp32p4: SPI Flash Size : 16MB
+[   0.094 mock] I (50) boot: ## Label            Usage          Type ST Offset   Length
+[   0.094 tab5] I (50) boot: Enabling RNG early entropy source...
+[   0.101 mock] I (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[   0.101 tab5] I (55) boot: Partition Table:
+[   0.107 tab5] I (57) boot: ## Label            Usage          Type ST Offset   Length
+[   0.113 mock] I (63) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[   0.113 tab5] I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[   0.120 mock] I (69) boot:  2 factory          factory app      00 00 00010000 00100000
+[   0.120 mock] I (76) boot: End of partition table
+[   0.120 tab5] I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[   0.126 mock] I (79) esp_image: segment 0: paddr=00010020 vaddr=3c020020 size=0ea50h ( 59984) map
+[   0.126 tab5] I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+[   0.126 tab5] I (84) boot: End of partition table
+[   0.132 mock] I (97) esp_image: segment 1: paddr=0001ea78 vaddr=3fc94300 size=015a0h (  5536) load
+[   0.132 tab5] I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0e758h ( 59224) map
+[   0.139 mock] I (99) esp_image: segment 2: paddr=00020020 vaddr=42000020 size=1fbf8h (130040) map
+[   0.145 tab5] I (102) esp_image: segment 1: paddr=0001e780 vaddr=30100000 size=00044h (    68) load
+[   0.151 tab5] I (103) esp_image: segment 2: paddr=0001e7cc vaddr=4ff00000 size=0184ch (  6220) load
+[   0.158 tab5] I (110) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=25fe4h (155620) map
+[   0.164 mock] I (124) esp_image: segment 3: paddr=0003fc20 vaddr=3fc958a0 size=0158ch (  5516) load
+[   0.164 mock] I (126) esp_image: segment 4: paddr=000411b4 vaddr=40374000 size=1025ch ( 66140) load
+[   0.175 tab5] I (136) esp_image: segment 4: paddr=0004600c vaddr=4ff0184c size=0f054h ( 61524) load
+[   0.182 mock] I (142) esp_image: segment 5: paddr=00051418 vaddr=50000000 size=00020h (    32) load
+[   0.188 mock] I (149) boot: Loaded app from partition at offset 0x10000
+[   0.188 mock] I (149) boot: Disabling RNG early entropy source...
+[   0.188 mock] I (160) cpu_start: Multicore app
+[   0.188 tab5] I (147) esp_image: segment 5: paddr=00055068 vaddr=4ff10900 size=02358h (  9048) load
+[   0.194 tab5] I (153) boot: Loaded app from partition at offset 0x10000
+[   0.194 tab5] I (153) boot: Disabling RNG early entropy source...
+[   0.201 mock] I (169) cpu_start: Pro cpu start user code
+[   0.207 mock] I (169) cpu_start: cpu freq: 160000000 Hz
+[   0.207 tab5] I (166) cpu_start: Multicore app
+[   0.213 mock] I (169) app_init: Application information:
+[   0.213 mock] I (169) app_init: Project name:     tab5_dxft8_mock
+[   0.219 mock] I (174) app_init: App version:      0.1.0
+[   0.219 tab5] I (177) cpu_start: Pro cpu start user code
+[   0.219 tab5] I (177) cpu_start: cpu freq: 360000000 Hz
+[   0.219 tab5] I (177) app_init: Application information:
+[   0.225 mock] I (178) app_init: Compile time:     Sep  4 2026 07:47:57
+[   0.225 tab5] I (178) app_init: Project name:     tab5_dxft8_bringup
+[   0.225 tab5] I (182) app_init: App version:      fa60dc2-dirty
+[   0.232 mock] I (183) app_init: ELF file SHA256:  b5f1f9dd8...
+[   0.232 mock] I (187) app_init: ESP-IDF:          v5.5.1
+[   0.232 mock] I (191) efuse_init: Min chip rev:     v0.0
+[   0.232 tab5] I (186) app_init: Compile time:     Sep  7 2026 08:52:42
+[   0.237 mock] I (195) efuse_init: Max chip rev:     v0.99
+[   0.237 tab5] I (191) app_init: ELF file SHA256:  6bc53455b...
+[   0.243 mock] I (199) efuse_init: Chip rev:         v0.2
+[   0.243 tab5] I (196) app_init: ESP-IDF:          v5.5.1
+[   0.243 tab5] I (200) efuse_init: Min chip rev:     v0.1
+[   0.249 mock] I (203) heap_init: Initializing. RAM available for dynamic allocation:
+[   0.249 tab5] I (203) efuse_init: Max chip rev:     v1.99
+[   0.249 tab5] I (207) efuse_init: Chip rev:         v1.3
+[   0.255 mock] I (209) heap_init: At 3FC98050 len 000516C0 (325 KiB): RAM
+[   0.255 mock] I (214) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[   0.255 tab5] I (211) heap_init: Initializing. RAM available for dynamic allocation:
+[   0.261 mock] I (219) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[   0.262 tab5] I (217) heap_init: At 4FF143F0 len 00026BD0 (154 KiB): RAM
+[   0.267 mock] I (224) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+[   0.267 tab5] I (223) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+[   0.273 mock] I (231) spi_flash: detected chip: boya
+[   0.273 tab5] I (228) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+[   0.279 mock] I (233) spi_flash: flash io: dio
+[   0.279 tab5] I (233) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+[   0.285 mock] I (236) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[   0.285 tab5] I (238) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+[   0.285 tab5] I (244) spi_flash: detected chip: generic
+[   0.291 mock] I (243) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[   0.291 mock] I (249) main_task: Started on CPU0
+[   0.291 tab5] I (247) spi_flash: flash io: qio
+[   0.291 tab5] I (250) main_task: Started on CPU0
+[   0.304 tab5] I (260) main_task: Calling app_main()
+[   0.304 tab5] I (260) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+[   0.310 tab5] I (260) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+[   0.316 tab5] I (270) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+[   0.322 mock] I (289) main_task: Calling app_main()
+[   0.328 mock] I (289) dxft8_mock: Tab5 DXFT8 RF-card mock - Si5351 + PCM1808 integration
+[   0.328 tab5] W (270) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+[   0.334 mock] W (289) pcm1808_emu: MCLK waiting: no clock on GPIO4
+[   0.340 mock] I (289) pcm1808_emu: MCLK monitor: GPIO4, expected=12288000 Hz (+/-5%)
+[   0.346 mock] I (299) pcm1808_emu: PCM1808 I2S slave armed: BCLK=GPIO5, LRCK=GPIO6, DOUT=GPIO7
+[   0.346 tab5] I (310) tab5_bringup: probe PASS: found Si5351 at 0x60
+[   0.347 tab5] I (310) tab5_bringup: status PASS: device=0x00, interrupt=0x00
+[   0.352 mock] I (309) pcm1808_emu: format: 48000 Hz, Philips I2S, stereo, 24 valid bits in 32-bit slots, 64 BCLK/frame
+[   0.352 tab5] I (310) si5351: 7.074 MHz register vectors match the reviewed design
+[   0.358 mock] I (319) si5351_emu: ready: address=0x60 (7-bit), SDA=GPIO8, SCL=GPIO9
+[   0.358 tab5] I (310) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+[   0.365 mock] I (319) si5351_emu: pointer <- 0x00
+[   0.365 tab5] I (330) si5351: verified registers 0x03..0x03
+[   0.371 mock] I (329) si5351_emu: read  reg=0x00 -> 0x00
+[   0.371 mock] I (329) si5351_emu: pointer <- 0x01
+[   0.371 tab5] I (330) si5351: verified registers 0x10..0x17
+[   0.378 mock] I (329) si5351_emu: read  reg=0x01 -> 0x00
+[   0.378 mock] I (339) si5351_emu: pointer <- 0x00
+[   0.378 tab5] I (330) si5351: verified registers 0x18..0x19
+[   0.378 tab5] I (330) si5351: verified registers 0x0F..0x0F
+[   0.384 mock] I (339) si5351_emu: read  reg=0x00 -> 0x00
+[   0.384 tab5] I (340) si5351: verified registers 0xB7..0xB7
+[   0.384 tab5] I (350) si5351: verified registers 0x1A..0x21
+[   0.390 mock] I (339) si5351_emu: pointer <- 0x00
+[   0.391 mock] I (349) si5351_emu: read  reg=0x00 -> 0x00
+[   0.391 tab5] I (350) si5351: verified registers 0x22..0x29
+[   0.397 mock] I (349) si5351_emu: write start=0x03, bytes=1
+[   0.397 mock] I (349) si5351_emu: ff
+[   0.397 mock] I (359) si5351_emu: all clock outputs disabled (safe state)
+[   0.397 tab5] I (360) si5351: verified registers 0x2A..0x31
+[   0.403 mock] I (359) si5351_emu: pointer <- 0x03
+[   0.404 tab5] I (360) si5351: verified registers 0x32..0x39
+[   0.404 tab5] I (360) si5351: verified registers 0x10..0x10
+[   0.404 tab5] I (360) si5351: verified registers 0x11..0x11
+[   0.409 mock] I (369) si5351_emu: read  reg=0x03 -> 0xFF
+[   0.409 mock] I (369) si5351_emu: write start=0x10, bytes=8
+[   0.409 tab5] I (370) si5351: verified PLL reset strobe self-cleared
+[   0.416 mock] I (369) si5351_emu: 80 80 80 80 80 80 80 80
+[   0.422 mock] I (379) si5351_emu: pointer <- 0x10
+[   0.422 mock] I (379) si5351_emu: read  reg=0x10 -> 0x80
+[   0.428 mock] I (379) si5351_emu: pointer <- 0x11
+[   0.428 tab5] I (390) si5351: verified registers 0x03..0x03
+[   0.428 tab5] I (390) si5351: enabled output mask=0x02 (register 3=0xFD)
+[   0.435 mock] I (389) si5351_emu: read  reg=0x11 -> 0x80
+[   0.435 mock] I (389) si5351_emu: pointer <- 0x12
+[   0.435 tab5] I (390) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+[   0.441 mock] I (389) si5351_emu: read  reg=0x12 -> 0x80
+[   0.441 mock] I (399) si5351_emu: pointer <- 0x13
+[   0.442 mock] I (399) si5351_emu: read  reg=0x13 -> 0x80
+[   0.442 tab5] W (390) tab5_bringup: TX CLOCK SELF-TEST ENABLED: use only with the mock or an unpowered PA
+[   0.448 mock] I (409) si5351_emu: pointer <- 0x14
+[   0.448 mock] I (409) si5351_emu: read  reg=0x14 -> 0x80
+[   0.455 mock] I (409) si5351_emu: pointer <- 0x15
+[   0.461 mock] I (419) si5351_emu: read  reg=0x15 -> 0x80
+[   0.461 mock] I (419) si5351_emu: pointer <- 0x16
+[   0.467 mock] I (419) si5351_emu: read  reg=0x16 -> 0x80
+[   0.473 mock] I (429) si5351_emu: pointer <- 0x17
+[   0.473 mock] I (429) si5351_emu: read  reg=0x17 -> 0x80
+[   0.480 mock] I (429) si5351_emu: write start=0x18, bytes=2
+[   0.480 mock] I (439) si5351_emu: 00 00
+[   0.480 mock] I (439) si5351_emu: pointer <- 0x18
+[   0.486 mock] I (439) si5351_emu: read  reg=0x18 -> 0x00
+[   0.486 mock] I (449) si5351_emu: pointer <- 0x19
+[   0.486 tab5] I (450) si5351: verified registers 0x03..0x03
+[   0.486 tab5] I (450) si5351: enabled output mask=0x03 (register 3=0xFC)
+[   0.492 mock] I (449) si5351_emu: read  reg=0x19 -> 0x00
+[   0.493 tab5] I (450) tab5_bringup: front-end clock state: TX-ready (CLK0 PA + CLK1 QSD on)
+[   0.499 mock] I (449) si5351_emu: write start=0x0F, bytes=1
+[   0.499 mock] I (459) si5351_emu: 00
+[   0.506 mock] I (459) si5351_emu: pointer <- 0x0F
+[   0.506 mock] I (459) si5351_emu: read  reg=0x0F -> 0x00
+[   0.512 mock] I (469) si5351_emu: write start=0xB7, bytes=1
+[   0.512 mock] I (469) si5351_emu: 12
+[   0.519 mock] I (469) si5351_emu: pointer <- 0xB7
+[   0.519 mock] I (479) si5351_emu: read  reg=0xB7 -> 0x12
+[   0.519 mock] I (479) si5351_emu: write start=0x1A, bytes=8
+[   0.526 mock] I (479) si5351_emu: 06 59 00 0d 3c 00 03 24
+[   0.532 mock] I (489) si5351_emu: pointer <- 0x1A
+[   0.532 mock] I (489) si5351_emu: read  reg=0x1A -> 0x06
+[   0.539 mock] I (499) si5351_emu: pointer <- 0x1B
+[   0.539 tab5] I (500) si5351: verified registers 0x03..0x03
+[   0.539 tab5] I (500) si5351: enabled output mask=0x02 (register 3=0xFD)
+[   0.539 tab5] I (500) tab5_bringup: front-end clock state: RX (CLK1 QSD on)
+[   0.545 mock] I (499) si5351_emu: read  reg=0x1B -> 0x59
+[   0.545 mock] I (499) si5351_emu: pointer <- 0x1C
+[   0.545 tab5] I (500) tab5_bringup: RX/TX-ready/RX clock-state switching PASS
+[   0.552 mock] I (509) si5351_emu: read  reg=0x1C -> 0x00
+[   0.552 mock] I (509) si5351_emu: pointer <- 0x1D
+[   0.552 mock] I (509) si5351_emu: read  reg=0x1D -> 0x0D
+[   0.552 tab5] I (510) tab5_bringup: SI5351 SELF-TEST PASS
+[   0.558 mock] I (519) si5351_emu: pointer <- 0x1E
+[   0.558 mock] I (519) si5351_emu: read  reg=0x1E -> 0x3C
+[   0.559 tab5] I (510) tab5_bringup: starting PCM1808-compatible I2S validation
+[   0.565 mock] I (519) si5351_emu: pointer <- 0x1F
+[   0.565 tab5] I (520) pcm1808_i2s: configured I2S1 master RX: MCLK=GPIO16, BCLK=GPIO45, LRCK=GPIO3, DIN=GPIO4
+[   0.570 mock] I (529) si5351_emu: read  reg=0x1F -> 0x00
+[   0.570 mock] I (529) si5351_emu: pointer <- 0x20
+[   0.570 tab5] I (520) pcm1808_i2s: clocks: Fs=48000 Hz, MCLK=12288000 Hz (256fs), BCLK=3072000 Hz (64fs)
+[   0.577 mock] I (529) si5351_emu: read  reg=0x20 -> 0x03
+[   0.583 mock] I (539) pcm1808_emu: MCLK PASS: measured=12253731 Hz, expected=12288000 Hz
+[   0.589 mock] I (539) si5351_emu: pointer <- 0x21
+[   0.596 mock] I (539) pcm1808_emu: valid PCM1808 pattern enabled after MCLK qualification
+[   0.603 mock] I (549) si5351_emu: read  reg=0x21 -> 0x24
+[   0.604 mock] I (559) si5351_emu: write start=0x22, bytes=8
+[   0.604 mock] I (559) si5351_emu: 06 59 00 0d 3c 00 03 24
+[   0.610 mock] I (569) si5351_emu: pointer <- 0x22
+[   0.610 mock] I (569) si5351_emu: read  reg=0x22 -> 0x06
+[   0.616 mock] I (569) si5351_emu: pointer <- 0x23
+[   0.622 mock] I (579) si5351_emu: read  reg=0x23 -> 0x59
+[   0.622 mock] I (579) si5351_emu: pointer <- 0x24
+[   0.629 mock] I (579) si5351_emu: read  reg=0x24 -> 0x00
+[   0.629 mock] I (589) si5351_emu: pointer <- 0x25
+[   0.635 mock] I (589) si5351_emu: read  reg=0x25 -> 0x0D
+[   0.635 mock] I (589) si5351_emu: pointer <- 0x26
+[   0.635 mock] I (599) si5351_emu: read  reg=0x26 -> 0x3C
+[   0.642 mock] I (599) si5351_emu: pointer <- 0x27
+[   0.648 mock] I (599) si5351_emu: read  reg=0x27 -> 0x00
+[   0.655 mock] I (539) si5351_emu: frequency decoder reference=26000000 Hz (active external reference on XA), register 183=0x12
+[   0.661 mock] I (609) si5351_emu: pointer <- 0x28
+[   0.668 mock] I (619) si5351_emu: read  reg=0x28 -> 0x03
+[   0.668 mock] I (629) si5351_emu: pointer <- 0x29
+[   0.674 mock] I (629) si5351_emu: read  reg=0x29 -> 0x24
+[   0.674 mock] I (629) si5351_emu: write start=0x2A, bytes=8
+[   0.674 mock] I (639) si5351_emu: 00 01 00 36 00 00 00 00
+[   0.681 mock] I (639) si5351_emu: pointer <- 0x2A
+[   0.681 tab5] I (640) pcm1808_i2s: mock pattern synchronized at sequence 0x12C0
+[   0.687 mock] I (639) si5351_emu: read  reg=0x2A -> 0x00
+[   0.687 mock] I (649) si5351_emu: pointer <- 0x2B
+[   0.694 mock] I (649) si5351_emu: read  reg=0x2B -> 0x01
+[   0.699 mock] I (649) si5351_emu: pointer <- 0x2C
+[   0.699 mock] I (659) si5351_emu: read  reg=0x2C -> 0x00
+[   0.706 mock] I (659) si5351_emu: pointer <- 0x2D
+[   0.706 mock] I (659) si5351_emu: read  reg=0x2D -> 0x36
+[   0.712 mock] I (669) si5351_emu: pointer <- 0x2E
+[   0.719 mock] I (669) si5351_emu: read  reg=0x2E -> 0x00
+[   0.720 mock] I (679) si5351_emu: pointer <- 0x2F
+[   0.720 mock] I (679) si5351_emu: read  reg=0x2F -> 0x00
+[   0.727 mock] I (679) si5351_emu: pointer <- 0x30
+[   0.727 mock] I (689) si5351_emu: read  reg=0x30 -> 0x00
+[   0.733 mock] I (689) si5351_emu: status register models PLL lock after reset strobes
+[   0.740 mock] I (689) si5351_emu: pointer <- 0x31
+[   0.746 mock] I (699) si5351_emu: read  reg=0x31 -> 0x00
+[   0.746 mock] I (699) si5351_emu: write start=0x32, bytes=8
+[   0.746 mock] I (709) si5351_emu: 00 01 00 0c 00 00 00 00
+[   0.754 mock] I (709) si5351_emu: pointer <- 0x32
+[   0.754 mock] I (709) si5351_emu: read  reg=0x32 -> 0x00
+[   0.760 mock] I (719) si5351_emu: pointer <- 0x33
+[   0.766 mock] I (719) si5351_emu: read  reg=0x33 -> 0x01
+[   0.767 mock] I (719) si5351_emu: pointer <- 0x34
+[   0.772 mock] I (729) si5351_emu: read  reg=0x34 -> 0x00
+[   0.779 mock] I (729) si5351_emu: pointer <- 0x35
+[   0.779 mock] I (729) si5351_emu: read  reg=0x35 -> 0x0C
+[   0.785 mock] I (739) si5351_emu: pointer <- 0x36
+[   0.785 mock] I (739) si5351_emu: read  reg=0x36 -> 0x00
+[   0.785 mock] I (749) si5351_emu: pointer <- 0x37
+[   0.792 mock] I (749) si5351_emu: read  reg=0x37 -> 0x00
+[   0.792 mock] I (749) si5351_emu: pointer <- 0x38
+[   0.798 mock] I (759) si5351_emu: read  reg=0x38 -> 0x00
+[   0.804 mock] I (759) si5351_emu: pointer <- 0x39
+[   0.804 mock] I (759) si5351_emu: read  reg=0x39 -> 0x00
+[   0.816 mock] W (769) si5351_emu: current milestone supports one response byte per read request
+[   0.816 mock] I (769) si5351_emu: write start=0x10, bytes=1
+[   0.822 mock] I (779) si5351_emu: 4f
+[   0.822 mock] I (779) si5351_emu: pointer <- 0x10
+[   0.828 mock] I (779) si5351_emu: read  reg=0x10 -> 0x4F
+[   0.834 mock] I (789) si5351_emu: write start=0x11, bytes=1
+[   0.834 mock] I (789) si5351_emu: 6f
+[   0.841 mock] I (789) si5351_emu: pointer <- 0x11
+[   0.841 mock] I (799) si5351_emu: read  reg=0x11 -> 0x6F
+[   0.847 mock] I (799) si5351_emu: write start=0xB1, bytes=1
+[   0.847 mock] I (799) si5351_emu: ac
+[   0.847 mock] I (809) si5351_emu: pointer <- 0xB1
+[   0.854 mock] I (809) si5351_emu: read  reg=0xB1 -> 0x00
+[   0.854 mock] I (809) si5351_emu: pointer <- 0x00
+[   0.861 mock] I (819) si5351_emu: read  reg=0x00 -> 0x00
+[   0.867 mock] I (819) si5351_emu: pointer <- 0x00
+[   0.867 mock] I (819) si5351_emu: read  reg=0x00 -> 0x00
+[   0.874 mock] I (829) si5351_emu: pointer <- 0x00
+[   0.874 mock] I (829) si5351_emu: read  reg=0x00 -> 0x00
+[   0.880 mock] I (829) si5351_emu: write start=0x03, bytes=1
+[   0.880 mock] I (839) si5351_emu: fd
+[   0.886 mock] I (839) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[   0.893 mock] I (849) dxft8_mock: Ready for the Tab5 I2C and I2S host tests
+[   0.899 mock] I (849) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[   0.906 mock] I (859) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[   0.912 mock] I (869) si5351_emu: pointer <- 0x03
+[   0.912 mock] I (869) si5351_emu: read  reg=0x03 -> 0xFD
+[   0.919 mock] I (869) si5351_emu: write start=0x03, bytes=1
+[   0.919 mock] I (879) si5351_emu: fc
+[   0.924 mock] I (879) si5351_emu: front-end clock state TX-ready: CLK0 PA + CLK1 QSD enabled
+[   0.930 mock] I (889) si5351_emu: CLK0 valid: PLLA=792288000 Hz, output=7074000 Hz, MS=112+0/1
+[   0.936 mock] I (889) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[   0.949 mock] I (899) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[   0.949 mock] I (909) si5351_emu: pointer <- 0x03
+[   0.954 mock] I (909) si5351_emu: read  reg=0x03 -> 0xFC
+[   0.960 mock] I (919) si5351_emu: write start=0x03, bytes=1
+[   0.960 mock] I (919) si5351_emu: fd
+[   0.966 mock] I (919) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[   0.973 mock] I (929) main_task: Returned from app_main()
+[   0.979 mock] I (929) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[   0.987 mock] I (939) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[   0.987 mock] I (949) si5351_emu: pointer <- 0x03
+[   0.987 mock] I (949) si5351_emu: read  reg=0x03 -> 0xFD
+[  10.672 tab5] I (10630) pcm1808_i2s: mock-pattern PASS: 480000 continuous stereo frames
+[  10.678 tab5] I (10630) pcm1808_i2s: word format PASS: left/right order, Philips shift, 24-bit alignment, and zero padding
+[  10.687 tab5] I (10640) tab5_bringup: I2S SELF-TEST PASS: 480000 frames checked after 4800 startup frames
+[  10.694 tab5] I (10640) tab5_bringup: ALL ENABLED SELF-TESTS PASS; final RF clock state remains RX
+[  10.700 mock] W (10669) pcm1808_emu: MCLK waiting: no clock on GPIO4
+[  10.700 mock] W (10669) pcm1808_emu: valid I2S pattern revoked until MCLK qualifies again
+[  10.700 tab5] I (10650) main_task: Returned from app_main()
+BENCH: resetting mock and waiting for both emulators
+[  10.908 mock] ESP-ROM:esp32s3-20210327
+[  10.914 mock] Build:Mar 27 2021
+[  10.921 mock] rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[  10.921 mock] SPIWP:0xee
+[  10.921 mock] mode:DIO, clock div:1
+[  10.927 mock] load:0x3fce2820,len:0x158c
+[  10.927 mock] load:0x403c8700,len:0xd24
+[  10.927 mock] load:0x403cb700,len:0x2f34
+[  10.927 mock] entry 0x403c8924
+[  10.934 mock] I (24) boot: ESP-IDF v5.5.1 2nd stage bootloader
+[  10.940 mock] I (25) boot: compile time Sep  4 2026 07:27:34
+[  10.946 mock] I (25) boot: Multicore bootloader
+[  10.946 mock] I (25) boot: chip revision: v0.2
+[  10.952 mock] I (28) boot: efuse block revision: v1.3
+[  10.953 mock] I (31) boot.esp32s3: Boot SPI Speed : 80MHz
+[  10.958 mock] I (35) boot.esp32s3: SPI Mode       : DIO
+[  10.964 mock] I (39) boot.esp32s3: SPI Flash Size : 16MB
+[  10.965 mock] I (43) boot: Enabling RNG early entropy source...
+[  10.965 mock] I (47) boot: Partition Table:
+[  10.971 mock] I (50) boot: ## Label            Usage          Type ST Offset   Length
+[  10.977 mock] I (56) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[  10.990 mock] I (63) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[  10.995 mock] I (69) boot:  2 factory          factory app      00 00 00010000 00100000
+[  10.995 mock] I (76) boot: End of partition table
+[  11.008 mock] I (79) esp_image: segment 0: paddr=00010020 vaddr=3c020020 size=0ea50h ( 59984) map
+[  11.008 mock] I (97) esp_image: segment 1: paddr=0001ea78 vaddr=3fc94300 size=015a0h (  5536) load
+[  11.015 mock] I (98) esp_image: segment 2: paddr=00020020 vaddr=42000020 size=1fbf8h (130040) map
+[  11.040 mock] I (124) esp_image: segment 3: paddr=0003fc20 vaddr=3fc958a0 size=0158ch (  5516) load
+[  11.046 mock] I (126) esp_image: segment 4: paddr=000411b4 vaddr=40374000 size=1025ch ( 66140) load
+[  11.059 mock] I (142) esp_image: segment 5: paddr=00051418 vaddr=50000000 size=00020h (    32) load
+[  11.065 mock] I (149) boot: Loaded app from partition at offset 0x10000
+[  11.065 mock] I (149) boot: Disabling RNG early entropy source...
+[  11.065 mock] I (160) cpu_start: Multicore app
+[  11.078 mock] I (169) cpu_start: Pro cpu start user code
+[  11.085 mock] I (169) cpu_start: cpu freq: 160000000 Hz
+[  11.091 mock] I (169) app_init: Application information:
+[  11.091 mock] I (169) app_init: Project name:     tab5_dxft8_mock
+[  11.098 mock] I (174) app_init: App version:      0.1.0
+[  11.098 mock] I (178) app_init: Compile time:     Sep  4 2026 07:47:57
+[  11.103 mock] I (183) app_init: ELF file SHA256:  b5f1f9dd8...
+[  11.103 mock] I (187) app_init: ESP-IDF:          v5.5.1
+[  11.110 mock] I (191) efuse_init: Min chip rev:     v0.0
+[  11.116 mock] I (195) efuse_init: Max chip rev:     v0.99
+[  11.123 mock] I (199) efuse_init: Chip rev:         v0.2
+[  11.129 mock] I (203) heap_init: Initializing. RAM available for dynamic allocation:
+[  11.136 mock] I (209) heap_init: At 3FC98050 len 000516C0 (325 KiB): RAM
+[  11.136 mock] I (214) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[  11.142 mock] I (219) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[  11.142 mock] I (224) heap_init: At 600FE000 len 00001FE8 (7 KiB): RTCRAM
+[  11.149 mock] I (231) spi_flash: detected chip: boya
+[  11.155 mock] I (233) spi_flash: flash io: dio
+[  11.162 mock] I (236) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[  11.168 mock] I (242) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[  11.168 mock] I (249) main_task: Started on CPU0
+[  11.199 mock] I (289) main_task: Calling app_main()
+[  11.206 mock] I (289) dxft8_mock: Tab5 DXFT8 RF-card mock - Si5351 + PCM1808 integration
+[  11.212 mock] W (289) pcm1808_emu: MCLK waiting: no clock on GPIO4
+[  11.212 mock] I (289) pcm1808_emu: MCLK monitor: GPIO4, expected=12288000 Hz (+/-5%)
+[  11.225 mock] I (299) pcm1808_emu: PCM1808 I2S slave armed: BCLK=GPIO5, LRCK=GPIO6, DOUT=GPIO7
+[  11.232 mock] I (309) pcm1808_emu: format: 48000 Hz, Philips I2S, stereo, 24 valid bits in 32-bit slots, 64 BCLK/frame
+[  11.238 mock] I (319) si5351_emu: ready: address=0x60 (7-bit), SDA=GPIO8, SCL=GPIO9
+[  11.250 mock] I (319) si5351_emu: frequency decoder reference=26000000 Hz (active external reference on XA), register 183=0x12
+[  11.256 mock] I (329) si5351_emu: status register models PLL lock after reset strobes
+[  11.263 mock] W (339) si5351_emu: current milestone supports one response byte per read request
+[  11.269 mock] I (349) dxft8_mock: Ready for the Tab5 I2C and I2S host tests
+[  11.269 mock] I (349) main_task: Returned from app_main()
+BENCH: run 1/3: resetting Tab5 only
+[  12.717 mock] I (1709) si5351_emu: pointer <- 0x00
+[  12.718 mock] I (1709) si5351_emu: read  reg=0x00 -> 0x00
+[  12.718 mock] I (1709) si5351_emu: pointer <- 0x01
+[  12.718 mock] I (1709) si5351_emu: read  reg=0x01 -> 0x00
+[  12.718 mock] I (1729) si5351_emu: pointer <- 0x00
+[  12.718 mock] I (1729) si5351_emu: read  reg=0x00 -> 0x00
+[  12.718 mock] I (1739) si5351_emu: pointer <- 0x00
+[  12.718 mock] I (1739) si5351_emu: read  reg=0x00 -> 0x00
+[  12.718 mock] I (1739) si5351_emu: write start=0x03, bytes=1
+[  12.718 mock] I (1739) si5351_emu: ff
+[  12.718 mock] I (1739) si5351_emu: all clock outputs disabled (safe state)
+[  12.718 mock] I (1749) si5351_emu: pointer <- 0x03
+[  12.718 mock] I (1749) si5351_emu: read  reg=0x03 -> 0xFF
+[  12.718 mock] I (1749) si5351_emu: write start=0x10, bytes=8
+[  12.718 mock] I (1759) si5351_emu: 80 80 80 80 80 80 80 80
+[  12.718 mock] I (1759) si5351_emu: pointer <- 0x10
+[  12.718 mock] I (1769) si5351_emu: read  reg=0x10 -> 0x80
+[  12.718 mock] I (1769) si5351_emu: pointer <- 0x11
+[  12.718 mock] I (1769) si5351_emu: read  reg=0x11 -> 0x80
+[  12.718 mock] I (1779) si5351_emu: pointer <- 0x12
+[  12.718 mock] I (1779) si5351_emu: read  reg=0x12 -> 0x80
+[  12.718 mock] I (1779) si5351_emu: pointer <- 0x13
+[  12.718 mock] I (1789) si5351_emu: read  reg=0x13 -> 0x80
+[  12.718 mock] I (1789) si5351_emu: pointer <- 0x14
+[  12.718 tab5] ESP-ROM:esp32p4-eco2-20240710
+[  12.718 tab5] Build:Jul 10 2024
+[  12.718 tab5] rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+[  12.718 tab5] Core0 Saved PC:0x4ff02e9a
+[  12.718 tab5] Core1 Saved PC:0x4ff02e9a
+[  12.718 tab5] SPI mode:DIO, clock div:1
+[  12.718 tab5] load:0x4ff33ce0,len:0x17a4
+[  12.718 tab5] load:0x4ff29ed0,len:0xfc0
+[  12.718 tab5] load:0x4ff2cbd0,len:0x345c
+[  12.718 tab5] entry 0x4ff29eda
+[  12.718 tab5] I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+[  12.718 tab5] I (28) boot: compile time Sep  4 2026 07:27:37
+[  12.718 tab5] I (28) boot: Multicore bootloader
+[  12.718 tab5] I (29) boot: chip revision: v1.3
+[  12.718 tab5] I (31) boot: efuse block revision: v0.3
+[  12.718 tab5] I (34) qio_mode: Enabling default flash chip QIO
+[  12.718 tab5] I (39) boot.esp32p4: SPI Speed      : 80MHz
+[  12.718 tab5] I (42) boot.esp32p4: SPI Mode       : QIO
+[  12.718 tab5] I (46) boot.esp32p4: SPI Flash Size : 16MB
+[  12.718 tab5] I (50) boot: Enabling RNG early entropy source...
+[  12.718 tab5] I (55) boot: Partition Table:
+[  12.718 tab5] I (57) boot: ## Label            Usage          Type ST Offset   Length
+[  12.718 tab5] I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[  12.718 tab5] I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[  12.723 mock] I (1789) si5351_emu: read  reg=0x14 -> 0x80
+[  12.723 mock] I (1799) si5351_emu: pointer <- 0x15
+[  12.723 mock] I (1799) si5351_emu: read  reg=0x15 -> 0x80
+[  12.723 mock] I (1809) si5351_emu: pointer <- 0x16
+[  12.724 tab5] I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+[  12.724 tab5] I (84) boot: End of partition table
+[  12.724 tab5] I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0e758h ( 59224) map
+[  12.724 tab5] I (102) esp_image: segment 1: paddr=0001e780 vaddr=30100000 size=00044h (    68) load
+[  12.724 tab5] I (103) esp_image: segment 2: paddr=0001e7cc vaddr=4ff00000 size=0184ch (  6220) load
+[  12.724 tab5] I (110) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=25fe4h (155620) map
+[  12.724 tab5] I (136) esp_image: segment 4: paddr=0004600c vaddr=4ff0184c size=0f054h ( 61524) load
+[  12.724 tab5] I (147) esp_image: segment 5: paddr=00055068 vaddr=4ff10900 size=02358h (  9048) load
+[  12.724 tab5] I (153) boot: Loaded app from partition at offset 0x10000
+[  12.724 tab5] I (153) boot: Disabling RNG early entropy source...
+[  12.724 tab5] I (166) cpu_start: Multicore app
+[  12.724 tab5] I (177) cpu_start: Pro cpu start user code
+[  12.724 tab5] I (177) cpu_start: cpu freq: 360000000 Hz
+[  12.724 tab5] I (177) app_init: Application information:
+[  12.724 tab5] I (178) app_init: Project name:     tab5_dxft8_bringup
+[  12.724 tab5] I (182) app_init: App version:      fa60dc2-dirty
+[  12.730 mock] I (1809) si5351_emu: read  reg=0x16 -> 0x80
+[  12.730 mock] I (1809) si5351_emu: pointer <- 0x17
+[  12.730 tab5] I (186) app_init: Compile time:     Sep  7 2026 08:52:42
+[  12.730 tab5] I (191) app_init: ELF file SHA256:  6bc53455b...
+[  12.730 tab5] I (196) app_init: ESP-IDF:          v5.5.1
+[  12.730 tab5] I (200) efuse_init: Min chip rev:     v0.1
+[  12.730 tab5] I (203) efuse_init: Max chip rev:     v1.99
+[  12.730 tab5] I (207) efuse_init: Chip rev:         v1.3
+[  12.730 tab5] I (211) heap_init: Initializing. RAM available for dynamic allocation:
+[  12.730 tab5] I (217) heap_init: At 4FF143F0 len 00026BD0 (154 KiB): RAM
+[  12.730 tab5] I (223) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+[  12.730 tab5] I (228) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+[  12.730 tab5] I (233) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+[  12.730 tab5] I (238) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+[  12.730 tab5] I (244) spi_flash: detected chip: generic
+[  12.730 tab5] I (247) spi_flash: flash io: qio
+[  12.730 tab5] I (250) main_task: Started on CPU0
+[  12.730 tab5] I (260) main_task: Calling app_main()
+[  12.730 tab5] I (260) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+[  12.730 tab5] I (260) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+[  12.730 tab5] I (270) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+[  12.737 mock] I (1819) si5351_emu: read  reg=0x17 -> 0x80
+[  12.737 tab5] W (270) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+[  12.737 tab5] I (290) tab5_bringup: probe PASS: found Si5351 at 0x60
+[  12.737 tab5] I (300) tab5_bringup: status PASS: device=0x00, interrupt=0x00
+[  12.737 tab5] I (300) si5351: 7.074 MHz register vectors match the reviewed design
+[  12.737 tab5] I (310) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+[  12.737 tab5] I (330) si5351: verified registers 0x03..0x03
+[  12.737 tab5] I (330) si5351: verified registers 0x10..0x17
+[  12.737 tab5] I (330) si5351: verified registers 0x18..0x19
+[  12.737 tab5] I (330) si5351: verified registers 0x0F..0x0F
+[  12.737 tab5] I (340) si5351: verified registers 0xB7..0xB7
+[  12.737 tab5] I (340) si5351: verified registers 0x1A..0x21
+[  12.737 tab5] I (350) si5351: verified registers 0x22..0x29
+[  12.737 tab5] I (350) si5351: verified registers 0x2A..0x31
+[  12.737 tab5] I (360) si5351: verified registers 0x32..0x39
+[  12.737 tab5] I (360) si5351: verified registers 0x10..0x10
+[  12.737 tab5] I (360) si5351: verified registers 0x11..0x11
+[  12.737 tab5] I (360) si5351: verified PLL reset strobe self-cleared
+[  12.744 mock] I (1819) si5351_emu: write start=0x18, bytes=2
+[  12.744 mock] I (1819) si5351_emu: 00 00
+[  12.744 tab5] I (390) si5351: verified registers 0x03..0x03
+[  12.744 tab5] I (390) si5351: enabled output mask=0x02 (register 3=0xFD)
+[  12.744 tab5] I (390) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+[  12.744 tab5] W (390) tab5_bringup: TX CLOCK SELF-TEST ENABLED: use only with the mock or an unpowered PA
+[  12.751 mock] I (1829) si5351_emu: pointer <- 0x18
+[  12.751 mock] I (1829) si5351_emu: read  reg=0x18 -> 0x00
+[  12.751 mock] I (1829) si5351_emu: pointer <- 0x19
+[  12.757 mock] I (1839) si5351_emu: read  reg=0x19 -> 0x00
+[  12.764 mock] I (1839) si5351_emu: write start=0x0F, bytes=1
+[  12.764 mock] I (1839) si5351_emu: 00
+[  12.764 tab5] I (450) si5351: verified registers 0x03..0x03
+[  12.764 tab5] I (450) si5351: enabled output mask=0x03 (register 3=0xFC)
+[  12.764 tab5] I (450) tab5_bringup: front-end clock state: TX-ready (CLK0 PA + CLK1 QSD on)
+[  12.771 mock] I (1849) si5351_emu: pointer <- 0x0F
+[  12.771 mock] I (1849) si5351_emu: read  reg=0x0F -> 0x00
+[  12.777 mock] I (1849) si5351_emu: write start=0xB7, bytes=1
+[  12.777 mock] I (1859) si5351_emu: 12
+[  12.783 mock] I (1859) si5351_emu: pointer <- 0xB7
+[  12.783 mock] I (1859) si5351_emu: read  reg=0xB7 -> 0x12
+[  12.784 mock] I (1869) si5351_emu: write start=0x1A, bytes=8
+[  12.790 mock] I (1869) si5351_emu: 06 59 00 0d 3c 00 03 24
+[  12.797 mock] I (1879) si5351_emu: pointer <- 0x1A
+[  12.797 mock] I (1879) si5351_emu: read  reg=0x1A -> 0x06
+[  12.804 mock] I (1879) si5351_emu: pointer <- 0x1B
+[  12.810 mock] I (1889) si5351_emu: read  reg=0x1B -> 0x59
+[  12.810 mock] I (1889) si5351_emu: pointer <- 0x1C
+[  12.810 tab5] I (500) si5351: verified registers 0x03..0x03
+[  12.810 tab5] I (500) si5351: enabled output mask=0x02 (register 3=0xFD)
+[  12.816 mock] I (1889) si5351_emu: read  reg=0x1C -> 0x00
+[  12.816 tab5] I (500) tab5_bringup: front-end clock state: RX (CLK1 QSD on)
+[  12.822 mock] I (1899) si5351_emu: pointer <- 0x1D
+[  12.823 mock] I (1899) si5351_emu: read  reg=0x1D -> 0x0D
+[  12.823 mock] I (1899) si5351_emu: pointer <- 0x1E
+[  12.823 tab5] I (500) tab5_bringup: RX/TX-ready/RX clock-state switching PASS
+[  12.823 tab5] I (510) tab5_bringup: SI5351 SELF-TEST PASS
+[  12.829 mock] I (1909) si5351_emu: read  reg=0x1E -> 0x3C
+[  12.829 mock] I (1909) si5351_emu: pointer <- 0x1F
+[  12.829 tab5] I (510) tab5_bringup: starting PCM1808-compatible I2S validation
+[  12.836 mock] I (1919) si5351_emu: read  reg=0x1F -> 0x00
+[  12.842 mock] I (1919) si5351_emu: pointer <- 0x20
+[  12.842 mock] I (1919) si5351_emu: read  reg=0x20 -> 0x03
+[  12.842 tab5] I (520) pcm1808_i2s: configured I2S1 master RX: MCLK=GPIO16, BCLK=GPIO45, LRCK=GPIO3, DIN=GPIO4
+[  12.849 mock] I (1929) si5351_emu: pointer <- 0x21
+[  12.849 tab5] I (520) pcm1808_i2s: clocks: Fs=48000 Hz, MCLK=12288000 Hz (256fs), BCLK=3072000 Hz (64fs)
+[  12.856 mock] I (1929) si5351_emu: read  reg=0x21 -> 0x24
+[  12.856 mock] I (1929) si5351_emu: write start=0x22, bytes=8
+[  12.856 mock] I (1939) pcm1808_emu: MCLK PASS: measured=12252736 Hz, expected=12288000 Hz
+[  12.862 mock] I (1939) si5351_emu: 06 59 00 0d 3c 00 03 24
+[  12.868 mock] I (1939) pcm1808_emu: valid PCM1808 pattern enabled after MCLK qualification
+[  12.875 mock] I (1949) si5351_emu: pointer <- 0x22
+[  12.881 mock] I (1959) si5351_emu: read  reg=0x22 -> 0x06
+[  12.881 mock] I (1959) si5351_emu: pointer <- 0x23
+[  12.888 mock] I (1969) si5351_emu: read  reg=0x23 -> 0x59
+[  12.894 mock] I (1969) si5351_emu: pointer <- 0x24
+[  12.894 mock] I (1969) si5351_emu: read  reg=0x24 -> 0x00
+[  12.899 mock] I (1979) si5351_emu: pointer <- 0x25
+[  12.904 mock] I (1979) si5351_emu: read  reg=0x25 -> 0x0D
+[  12.904 mock] I (1979) si5351_emu: pointer <- 0x26
+[  12.911 mock] I (1989) si5351_emu: read  reg=0x26 -> 0x3C
+[  12.911 mock] I (1989) si5351_emu: pointer <- 0x27
+[  12.911 mock] I (1989) si5351_emu: read  reg=0x27 -> 0x00
+[  12.917 mock] I (1999) si5351_emu: pointer <- 0x28
+[  12.923 mock] I (1999) si5351_emu: read  reg=0x28 -> 0x03
+[  12.923 mock] I (2009) si5351_emu: pointer <- 0x29
+[  12.930 mock] I (2009) si5351_emu: read  reg=0x29 -> 0x24
+[  12.937 mock] I (2009) si5351_emu: write start=0x2A, bytes=8
+[  12.937 mock] I (2019) si5351_emu: 00 01 00 36 00 00 00 00
+[  12.943 mock] I (2019) si5351_emu: pointer <- 0x2A
+[  12.950 mock] I (2019) si5351_emu: read  reg=0x2A -> 0x00
+[  12.950 mock] I (2029) si5351_emu: pointer <- 0x2B
+[  12.950 mock] I (2029) si5351_emu: read  reg=0x2B -> 0x01
+[  12.950 mock] I (2039) si5351_emu: pointer <- 0x2C
+[  12.950 tab5] I (640) pcm1808_i2s: mock pattern synchronized at sequence 0x12C0
+[  12.957 mock] I (2039) si5351_emu: read  reg=0x2C -> 0x00
+[  12.963 mock] I (2039) si5351_emu: pointer <- 0x2D
+[  12.963 mock] I (2049) si5351_emu: read  reg=0x2D -> 0x36
+[  12.970 mock] I (2049) si5351_emu: pointer <- 0x2E
+[  12.977 mock] I (2049) si5351_emu: read  reg=0x2E -> 0x00
+[  12.977 mock] I (2059) si5351_emu: pointer <- 0x2F
+[  12.984 mock] I (2059) si5351_emu: read  reg=0x2F -> 0x00
+[  12.984 mock] I (2059) si5351_emu: pointer <- 0x30
+[  12.984 mock] I (2069) si5351_emu: read  reg=0x30 -> 0x00
+[  12.990 mock] I (2069) si5351_emu: pointer <- 0x31
+[  12.997 mock] I (2069) si5351_emu: read  reg=0x31 -> 0x00
+[  12.997 mock] I (2079) si5351_emu: write start=0x32, bytes=8
+[  13.002 mock] I (2079) si5351_emu: 00 01 00 0c 00 00 00 00
+[  13.008 mock] I (2089) si5351_emu: pointer <- 0x32
+[  13.008 mock] I (2089) si5351_emu: read  reg=0x32 -> 0x00
+[  13.014 mock] I (2089) si5351_emu: pointer <- 0x33
+[  13.021 mock] I (2099) si5351_emu: read  reg=0x33 -> 0x01
+[  13.021 mock] I (2099) si5351_emu: pointer <- 0x34
+[  13.028 mock] I (2099) si5351_emu: read  reg=0x34 -> 0x00
+[  13.028 mock] I (2109) si5351_emu: pointer <- 0x35
+[  13.028 mock] I (2109) si5351_emu: read  reg=0x35 -> 0x0C
+[  13.034 mock] I (2119) si5351_emu: pointer <- 0x36
+[  13.040 mock] I (2119) si5351_emu: read  reg=0x36 -> 0x00
+[  13.040 mock] I (2119) si5351_emu: pointer <- 0x37
+[  13.046 mock] I (2129) si5351_emu: read  reg=0x37 -> 0x00
+[  13.047 mock] I (2129) si5351_emu: pointer <- 0x38
+[  13.052 mock] I (2129) si5351_emu: read  reg=0x38 -> 0x00
+[  13.059 mock] I (2139) si5351_emu: pointer <- 0x39
+[  13.059 mock] I (2139) si5351_emu: read  reg=0x39 -> 0x00
+[  13.065 mock] I (2139) si5351_emu: write start=0x10, bytes=1
+[  13.072 mock] I (2149) si5351_emu: 4f
+[  13.072 mock] I (2149) si5351_emu: pointer <- 0x10
+[  13.078 mock] I (2149) si5351_emu: read  reg=0x10 -> 0x4F
+[  13.078 mock] I (2159) si5351_emu: write start=0x11, bytes=1
+[  13.078 mock] I (2159) si5351_emu: 6f
+[  13.084 mock] I (2159) si5351_emu: pointer <- 0x11
+[  13.084 mock] I (2169) si5351_emu: read  reg=0x11 -> 0x6F
+[  13.091 mock] I (2169) si5351_emu: write start=0xB1, bytes=1
+[  13.098 mock] I (2179) si5351_emu: ac
+[  13.098 mock] I (2179) si5351_emu: pointer <- 0xB1
+[  13.104 mock] I (2179) si5351_emu: read  reg=0xB1 -> 0x00
+[  13.104 mock] I (2179) si5351_emu: pointer <- 0x00
+[  13.111 mock] I (2189) si5351_emu: read  reg=0x00 -> 0x00
+[  13.111 mock] I (2189) si5351_emu: pointer <- 0x00
+[  13.111 mock] I (2199) si5351_emu: read  reg=0x00 -> 0x00
+[  13.117 mock] I (2199) si5351_emu: pointer <- 0x00
+[  13.124 mock] I (2199) si5351_emu: read  reg=0x00 -> 0x00
+[  13.124 mock] I (2209) si5351_emu: write start=0x03, bytes=1
+[  13.130 mock] I (2209) si5351_emu: fd
+[  13.137 mock] I (2209) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[  13.144 mock] I (2219) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  13.149 mock] I (2229) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  13.156 mock] I (2229) si5351_emu: pointer <- 0x03
+[  13.156 mock] I (2239) si5351_emu: read  reg=0x03 -> 0xFD
+[  13.163 mock] I (2239) si5351_emu: write start=0x03, bytes=1
+[  13.163 mock] I (2239) si5351_emu: fc
+[  13.170 mock] I (2249) si5351_emu: front-end clock state TX-ready: CLK0 PA + CLK1 QSD enabled
+[  13.177 mock] I (2249) si5351_emu: CLK0 valid: PLLA=792288000 Hz, output=7074000 Hz, MS=112+0/1
+[  13.184 mock] I (2259) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  13.190 mock] I (2269) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  13.197 mock] I (2279) si5351_emu: pointer <- 0x03
+[  13.197 mock] I (2279) si5351_emu: read  reg=0x03 -> 0xFC
+[  13.204 mock] I (2279) si5351_emu: write start=0x03, bytes=1
+[  13.210 mock] I (2289) si5351_emu: fd
+[  13.217 mock] I (2289) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[  13.217 mock] I (2289) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  13.224 mock] I (2299) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  13.230 mock] I (2309) si5351_emu: pointer <- 0x03
+[  13.230 mock] I (2309) si5351_emu: read  reg=0x03 -> 0xFD
+[  22.946 tab5] I (10630) pcm1808_i2s: mock-pattern PASS: 480000 continuous stereo frames
+[  22.952 tab5] I (10630) pcm1808_i2s: word format PASS: left/right order, Philips shift, 24-bit alignment, and zero padding
+[  22.959 tab5] I (10640) tab5_bringup: I2S SELF-TEST PASS: 480000 frames checked after 4800 startup frames
+[  22.965 tab5] I (10640) tab5_bringup: ALL ENABLED SELF-TESTS PASS; final RF clock state remains RX
+[  22.971 tab5] I (10650) main_task: Returned from app_main()
+[  22.977 mock] W (12069) pcm1808_emu: MCLK waiting: no clock on GPIO4
+[  22.983 mock] W (12069) pcm1808_emu: valid I2S pattern revoked until MCLK qualifies again
+BENCH: run 1 PASS
+BENCH: run 2/3: resetting Tab5 only
+[  25.443 mock] I (14439) si5351_emu: pointer <- 0x00
+[  25.444 mock] I (14439) si5351_emu: read  reg=0x00 -> 0x00
+[  25.444 mock] I (14439) si5351_emu: pointer <- 0x01
+[  25.444 mock] I (14439) si5351_emu: read  reg=0x01 -> 0x00
+[  25.444 mock] I (14459) si5351_emu: pointer <- 0x00
+[  25.444 mock] I (14459) si5351_emu: read  reg=0x00 -> 0x00
+[  25.444 mock] I (14469) si5351_emu: pointer <- 0x00
+[  25.444 mock] I (14469) si5351_emu: read  reg=0x00 -> 0x00
+[  25.444 mock] I (14469) si5351_emu: write start=0x03, bytes=1
+[  25.444 mock] I (14469) si5351_emu: ff
+[  25.444 mock] I (14469) si5351_emu: all clock outputs disabled (safe state)
+[  25.444 mock] I (14479) si5351_emu: pointer <- 0x03
+[  25.444 mock] I (14479) si5351_emu: read  reg=0x03 -> 0xFF
+[  25.444 mock] I (14479) si5351_emu: write start=0x10, bytes=8
+[  25.444 mock] I (14489) si5351_emu: 80 80 80 80 80 80 80 80
+[  25.444 mock] I (14489) si5351_emu: pointer <- 0x10
+[  25.444 mock] I (14499) si5351_emu: read  reg=0x10 -> 0x80
+[  25.444 mock] I (14499) si5351_emu: pointer <- 0x11
+[  25.444 mock] I (14499) si5351_emu: read  reg=0x11 -> 0x80
+[  25.444 mock] I (14509) si5351_emu: pointer <- 0x12
+[  25.444 mock] I (14509) si5351_emu: read  reg=0x12 -> 0x80
+[  25.444 mock] I (14509) si5351_emu: pointer <- 0x13
+[  25.444 mock] I (14519) si5351_emu: read  reg=0x13 -> 0x80
+[  25.444 tab5] ESP-ROM:esp32p4-eco2-20240710
+[  25.444 tab5] Build:Jul 10 2024
+[  25.444 tab5] rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+[  25.444 tab5] Core0 Saved PC:0x4ff02e9a
+[  25.444 tab5] Core1 Saved PC:0x4ff02e9a
+[  25.444 tab5] SPI mode:DIO, clock div:1
+[  25.444 tab5] load:0x4ff33ce0,len:0x17a4
+[  25.444 tab5] load:0x4ff29ed0,len:0xfc0
+[  25.444 tab5] load:0x4ff2cbd0,len:0x345c
+[  25.444 tab5] entry 0x4ff29eda
+[  25.444 tab5] I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+[  25.444 tab5] I (28) boot: compile time Sep  4 2026 07:27:37
+[  25.444 tab5] I (28) boot: Multicore bootloader
+[  25.444 tab5] I (29) boot: chip revision: v1.3
+[  25.444 tab5] I (31) boot: efuse block revision: v0.3
+[  25.444 tab5] I (34) qio_mode: Enabling default flash chip QIO
+[  25.444 tab5] I (39) boot.esp32p4: SPI Speed      : 80MHz
+[  25.444 tab5] I (42) boot.esp32p4: SPI Mode       : QIO
+[  25.444 tab5] I (46) boot.esp32p4: SPI Flash Size : 16MB
+[  25.444 tab5] I (50) boot: Enabling RNG early entropy source...
+[  25.444 tab5] I (55) boot: Partition Table:
+[  25.444 tab5] I (57) boot: ## Label            Usage          Type ST Offset   Length
+[  25.444 tab5] I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[  25.444 tab5] I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[  25.451 mock] I (14519) si5351_emu: pointer <- 0x14
+[  25.451 mock] I (14529) si5351_emu: read  reg=0x14 -> 0x80
+[  25.451 mock] I (14529) si5351_emu: pointer <- 0x15
+[  25.451 tab5] I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+[  25.451 tab5] I (84) boot: End of partition table
+[  25.451 tab5] I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0e758h ( 59224) map
+[  25.451 tab5] I (102) esp_image: segment 1: paddr=0001e780 vaddr=30100000 size=00044h (    68) load
+[  25.451 tab5] I (103) esp_image: segment 2: paddr=0001e7cc vaddr=4ff00000 size=0184ch (  6220) load
+[  25.451 tab5] I (110) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=25fe4h (155620) map
+[  25.451 tab5] I (136) esp_image: segment 4: paddr=0004600c vaddr=4ff0184c size=0f054h ( 61524) load
+[  25.451 tab5] I (147) esp_image: segment 5: paddr=00055068 vaddr=4ff10900 size=02358h (  9048) load
+[  25.451 tab5] I (153) boot: Loaded app from partition at offset 0x10000
+[  25.451 tab5] I (153) boot: Disabling RNG early entropy source...
+[  25.451 tab5] I (166) cpu_start: Multicore app
+[  25.451 tab5] I (177) cpu_start: Pro cpu start user code
+[  25.451 tab5] I (177) cpu_start: cpu freq: 360000000 Hz
+[  25.451 tab5] I (177) app_init: Application information:
+[  25.451 tab5] I (178) app_init: Project name:     tab5_dxft8_bringup
+[  25.451 tab5] I (182) app_init: App version:      fa60dc2-dirty
+[  25.457 mock] I (14529) si5351_emu: read  reg=0x15 -> 0x80
+[  25.457 mock] I (14539) si5351_emu: pointer <- 0x16
+[  25.457 mock] I (14539) si5351_emu: read  reg=0x16 -> 0x80
+[  25.457 tab5] I (186) app_init: Compile time:     Sep  7 2026 08:52:42
+[  25.458 tab5] I (191) app_init: ELF file SHA256:  6bc53455b...
+[  25.458 tab5] I (196) app_init: ESP-IDF:          v5.5.1
+[  25.458 tab5] I (200) efuse_init: Min chip rev:     v0.1
+[  25.458 tab5] I (203) efuse_init: Max chip rev:     v1.99
+[  25.458 tab5] I (207) efuse_init: Chip rev:         v1.3
+[  25.458 tab5] I (211) heap_init: Initializing. RAM available for dynamic allocation:
+[  25.458 tab5] I (217) heap_init: At 4FF143F0 len 00026BD0 (154 KiB): RAM
+[  25.458 tab5] I (223) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+[  25.458 tab5] I (228) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+[  25.458 tab5] I (233) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+[  25.458 tab5] I (238) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+[  25.458 tab5] I (244) spi_flash: detected chip: generic
+[  25.458 tab5] I (247) spi_flash: flash io: qio
+[  25.458 tab5] I (250) main_task: Started on CPU0
+[  25.458 tab5] I (260) main_task: Calling app_main()
+[  25.458 tab5] I (260) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+[  25.458 tab5] I (260) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+[  25.458 tab5] I (270) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+[  25.464 mock] I (14539) si5351_emu: pointer <- 0x17
+[  25.464 mock] I (14549) si5351_emu: read  reg=0x17 -> 0x80
+[  25.464 tab5] W (270) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+[  25.464 tab5] I (290) tab5_bringup: probe PASS: found Si5351 at 0x60
+[  25.464 tab5] I (300) tab5_bringup: status PASS: device=0x00, interrupt=0x00
+[  25.464 tab5] I (300) si5351: 7.074 MHz register vectors match the reviewed design
+[  25.465 tab5] I (310) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+[  25.465 tab5] I (330) si5351: verified registers 0x03..0x03
+[  25.465 tab5] I (330) si5351: verified registers 0x10..0x17
+[  25.465 tab5] I (330) si5351: verified registers 0x18..0x19
+[  25.465 tab5] I (330) si5351: verified registers 0x0F..0x0F
+[  25.465 tab5] I (340) si5351: verified registers 0xB7..0xB7
+[  25.465 tab5] I (340) si5351: verified registers 0x1A..0x21
+[  25.465 tab5] I (350) si5351: verified registers 0x22..0x29
+[  25.465 tab5] I (350) si5351: verified registers 0x2A..0x31
+[  25.465 tab5] I (360) si5351: verified registers 0x32..0x39
+[  25.465 tab5] I (360) si5351: verified registers 0x10..0x10
+[  25.465 tab5] I (360) si5351: verified registers 0x11..0x11
+[  25.465 tab5] I (360) si5351: verified PLL reset strobe self-cleared
+[  25.471 mock] I (14549) si5351_emu: write start=0x18, bytes=2
+[  25.471 tab5] I (390) si5351: verified registers 0x03..0x03
+[  25.471 tab5] I (390) si5351: enabled output mask=0x02 (register 3=0xFD)
+[  25.471 tab5] I (390) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+[  25.471 tab5] W (390) tab5_bringup: TX CLOCK SELF-TEST ENABLED: use only with the mock or an unpowered PA
+[  25.478 mock] I (14559) si5351_emu: 00 00
+[  25.478 mock] I (14559) si5351_emu: pointer <- 0x18
+[  25.484 mock] I (14559) si5351_emu: read  reg=0x18 -> 0x00
+[  25.491 mock] I (14569) si5351_emu: pointer <- 0x19
+[  25.491 mock] I (14569) si5351_emu: read  reg=0x19 -> 0x00
+[  25.491 mock] I (14569) si5351_emu: write start=0x0F, bytes=1
+[  25.491 mock] I (14579) si5351_emu: 00
+[  25.491 tab5] I (450) si5351: verified registers 0x03..0x03
+[  25.491 tab5] I (450) si5351: enabled output mask=0x03 (register 3=0xFC)
+[  25.500 mock] I (14579) si5351_emu: pointer <- 0x0F
+[  25.500 tab5] I (450) tab5_bringup: front-end clock state: TX-ready (CLK0 PA + CLK1 QSD on)
+[  25.506 mock] I (14579) si5351_emu: read  reg=0x0F -> 0x00
+[  25.513 mock] I (14589) si5351_emu: write start=0xB7, bytes=1
+[  25.513 mock] I (14589) si5351_emu: 12
+[  25.513 mock] I (14589) si5351_emu: pointer <- 0xB7
+[  25.513 mock] I (14599) si5351_emu: read  reg=0xB7 -> 0x12
+[  25.519 mock] I (14599) si5351_emu: write start=0x1A, bytes=8
+[  25.526 mock] I (14609) si5351_emu: 06 59 00 0d 3c 00 03 24
+[  25.526 mock] I (14609) si5351_emu: pointer <- 0x1A
+[  25.532 mock] I (14609) si5351_emu: read  reg=0x1A -> 0x06
+[  25.539 mock] I (14619) si5351_emu: pointer <- 0x1B
+[  25.539 mock] I (14619) si5351_emu: read  reg=0x1B -> 0x59
+[  25.539 tab5] I (500) si5351: verified registers 0x03..0x03
+[  25.539 tab5] I (500) si5351: enabled output mask=0x02 (register 3=0xFD)
+[  25.546 mock] I (14619) si5351_emu: pointer <- 0x1C
+[  25.546 mock] I (14629) si5351_emu: read  reg=0x1C -> 0x00
+[  25.546 mock] I (14629) si5351_emu: pointer <- 0x1D
+[  25.546 tab5] I (500) tab5_bringup: front-end clock state: RX (CLK1 QSD on)
+[  25.552 mock] I (14639) si5351_emu: read  reg=0x1D -> 0x0D
+[  25.553 tab5] I (500) tab5_bringup: RX/TX-ready/RX clock-state switching PASS
+[  25.553 tab5] I (510) tab5_bringup: SI5351 SELF-TEST PASS
+[  25.559 mock] I (14639) si5351_emu: pointer <- 0x1E
+[  25.559 mock] I (14639) si5351_emu: read  reg=0x1E -> 0x3C
+[  25.560 tab5] I (510) tab5_bringup: starting PCM1808-compatible I2S validation
+[  25.566 mock] I (14649) si5351_emu: pointer <- 0x1F
+[  25.571 mock] I (14649) si5351_emu: read  reg=0x1F -> 0x00
+[  25.571 mock] I (14649) si5351_emu: pointer <- 0x20
+[  25.571 tab5] I (520) pcm1808_i2s: configured I2S1 master RX: MCLK=GPIO16, BCLK=GPIO45, LRCK=GPIO3, DIN=GPIO4
+[  25.578 mock] I (14659) si5351_emu: read  reg=0x20 -> 0x03
+[  25.578 tab5] I (520) pcm1808_i2s: clocks: Fs=48000 Hz, MCLK=12288000 Hz (256fs), BCLK=3072000 Hz (64fs)
+[  25.584 mock] I (14659) si5351_emu: pointer <- 0x21
+[  25.584 mock] I (14659) si5351_emu: read  reg=0x21 -> 0x24
+[  25.591 mock] I (14669) pcm1808_emu: MCLK PASS: measured=12252736 Hz, expected=12288000 Hz
+[  25.591 mock] I (14669) si5351_emu: write start=0x22, bytes=8
+[  25.597 mock] I (14679) si5351_emu: 06 59 00 0d 3c 00 03 24
+[  25.604 mock] I (14679) si5351_emu: pointer <- 0x22
+[  25.604 mock] I (14689) si5351_emu: read  reg=0x22 -> 0x06
+[  25.610 mock] I (14689) si5351_emu: pointer <- 0x23
+[  25.617 mock] I (14689) si5351_emu: read  reg=0x23 -> 0x59
+[  25.617 mock] I (14699) si5351_emu: pointer <- 0x24
+[  25.623 mock] I (14699) si5351_emu: read  reg=0x24 -> 0x00
+[  25.630 mock] I (14709) si5351_emu: pointer <- 0x25
+[  25.630 mock] I (14709) si5351_emu: read  reg=0x25 -> 0x0D
+[  25.630 mock] I (14709) si5351_emu: pointer <- 0x26
+[  25.636 mock] I (14719) si5351_emu: read  reg=0x26 -> 0x3C
+[  25.636 mock] I (14719) si5351_emu: pointer <- 0x27
+[  25.642 mock] I (14719) si5351_emu: read  reg=0x27 -> 0x00
+[  25.649 mock] I (14729) si5351_emu: pointer <- 0x28
+[  25.649 mock] I (14729) si5351_emu: read  reg=0x28 -> 0x03
+[  25.655 mock] I (14739) si5351_emu: pointer <- 0x29
+[  25.662 mock] I (14739) si5351_emu: read  reg=0x29 -> 0x24
+[  25.669 mock] I (14739) si5351_emu: write start=0x2A, bytes=8
+[  25.669 mock] I (14749) si5351_emu: 00 01 00 36 00 00 00 00
+[  25.669 mock] I (14749) si5351_emu: pointer <- 0x2A
+[  25.676 mock] I (14749) si5351_emu: read  reg=0x2A -> 0x00
+[  25.676 mock] I (14759) si5351_emu: pointer <- 0x2B
+[  25.682 mock] I (14759) si5351_emu: read  reg=0x2B -> 0x01
+[  25.682 tab5] I (640) pcm1808_i2s: mock pattern synchronized at sequence 0x0BFB
+[  25.688 mock] I (14769) si5351_emu: pointer <- 0x2C
+[  25.688 mock] I (14769) si5351_emu: read  reg=0x2C -> 0x00
+[  25.694 mock] I (14769) si5351_emu: pointer <- 0x2D
+[  25.700 mock] I (14779) si5351_emu: read  reg=0x2D -> 0x36
+[  25.700 mock] I (14779) si5351_emu: pointer <- 0x2E
+[  25.706 mock] I (14779) si5351_emu: read  reg=0x2E -> 0x00
+[  25.713 mock] I (14789) si5351_emu: pointer <- 0x2F
+[  25.713 mock] I (14789) si5351_emu: read  reg=0x2F -> 0x00
+[  25.713 mock] I (14799) si5351_emu: pointer <- 0x30
+[  25.719 mock] I (14799) si5351_emu: read  reg=0x30 -> 0x00
+[  25.719 mock] I (14799) si5351_emu: pointer <- 0x31
+[  25.725 mock] I (14809) si5351_emu: read  reg=0x31 -> 0x00
+[  25.732 mock] I (14809) si5351_emu: write start=0x32, bytes=8
+[  25.732 mock] I (14809) si5351_emu: 00 01 00 0c 00 00 00 00
+[  25.738 mock] I (14819) si5351_emu: pointer <- 0x32
+[  25.745 mock] I (14819) si5351_emu: read  reg=0x32 -> 0x00
+[  25.745 mock] I (14829) si5351_emu: pointer <- 0x33
+[  25.752 mock] I (14829) si5351_emu: read  reg=0x33 -> 0x01
+[  25.753 mock] I (14829) si5351_emu: pointer <- 0x34
+[  25.753 mock] I (14839) si5351_emu: read  reg=0x34 -> 0x00
+[  25.759 mock] I (14839) si5351_emu: pointer <- 0x35
+[  25.766 mock] I (14839) si5351_emu: read  reg=0x35 -> 0x0C
+[  25.766 mock] I (14849) si5351_emu: pointer <- 0x36
+[  25.772 mock] I (14849) si5351_emu: read  reg=0x36 -> 0x00
+[  25.779 mock] I (14859) si5351_emu: pointer <- 0x37
+[  25.779 mock] I (14859) si5351_emu: read  reg=0x37 -> 0x00
+[  25.785 mock] I (14859) si5351_emu: pointer <- 0x38
+[  25.791 mock] I (14869) si5351_emu: read  reg=0x38 -> 0x00
+[  25.791 mock] I (14869) si5351_emu: pointer <- 0x39
+[  25.791 mock] I (14869) si5351_emu: read  reg=0x39 -> 0x00
+[  25.798 mock] I (14879) si5351_emu: write start=0x10, bytes=1
+[  25.798 mock] I (14879) si5351_emu: 4f
+[  25.804 mock] I (14879) si5351_emu: pointer <- 0x10
+[  25.811 mock] I (14889) si5351_emu: read  reg=0x10 -> 0x4F
+[  25.811 mock] I (14889) si5351_emu: write start=0x11, bytes=1
+[  25.817 mock] I (14899) si5351_emu: 6f
+[  25.817 mock] I (14899) si5351_emu: pointer <- 0x11
+[  25.824 mock] I (14899) si5351_emu: read  reg=0x11 -> 0x6F
+[  25.830 mock] I (14909) si5351_emu: write start=0xB1, bytes=1
+[  25.830 mock] I (14909) si5351_emu: ac
+[  25.830 mock] I (14909) si5351_emu: pointer <- 0xB1
+[  25.837 mock] I (14919) si5351_emu: read  reg=0xB1 -> 0x00
+[  25.837 mock] I (14919) si5351_emu: pointer <- 0x00
+[  25.844 mock] I (14919) si5351_emu: read  reg=0x00 -> 0x00
+[  25.844 mock] I (14929) si5351_emu: pointer <- 0x00
+[  25.850 mock] I (14929) si5351_emu: read  reg=0x00 -> 0x00
+[  25.858 mock] I (14929) si5351_emu: pointer <- 0x00
+[  25.858 mock] I (14939) si5351_emu: read  reg=0x00 -> 0x00
+[  25.858 mock] I (14939) si5351_emu: write start=0x03, bytes=1
+[  25.864 mock] I (14949) si5351_emu: fd
+[  25.870 mock] I (14949) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[  25.877 mock] I (14949) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  25.883 mock] I (14959) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  25.890 mock] I (14969) si5351_emu: pointer <- 0x03
+[  25.896 mock] I (14969) si5351_emu: read  reg=0x03 -> 0xFD
+[  25.896 mock] I (14979) si5351_emu: write start=0x03, bytes=1
+[  25.896 mock] I (14979) si5351_emu: fc
+[  25.902 mock] I (14979) si5351_emu: front-end clock state TX-ready: CLK0 PA + CLK1 QSD enabled
+[  25.909 mock] I (14989) si5351_emu: CLK0 valid: PLLA=792288000 Hz, output=7074000 Hz, MS=112+0/1
+[  25.922 mock] I (14999) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  25.928 mock] I (14999) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  25.935 mock] I (15009) si5351_emu: pointer <- 0x03
+[  25.936 mock] I (15009) si5351_emu: read  reg=0x03 -> 0xFC
+[  25.937 mock] I (15019) si5351_emu: write start=0x03, bytes=1
+[  25.943 mock] I (15019) si5351_emu: fd
+[  25.949 mock] I (15029) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[  25.956 mock] I (15029) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  25.962 mock] I (15039) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  25.968 mock] I (15049) si5351_emu: pointer <- 0x03
+[  25.968 mock] I (15049) si5351_emu: read  reg=0x03 -> 0xFD
+[  35.674 tab5] I (10630) pcm1808_i2s: mock-pattern PASS: 480000 continuous stereo frames
+[  35.681 tab5] I (10630) pcm1808_i2s: word format PASS: left/right order, Philips shift, 24-bit alignment, and zero padding
+[  35.693 tab5] I (10640) tab5_bringup: I2S SELF-TEST PASS: 480000 frames checked after 4800 startup frames
+[  35.699 tab5] I (10640) tab5_bringup: ALL ENABLED SELF-TESTS PASS; final RF clock state remains RX
+[  35.700 tab5] I (10650) main_task: Returned from app_main()
+[  35.706 mock] W (24799) pcm1808_emu: MCLK waiting: no clock on GPIO4
+[  35.712 mock] W (24799) pcm1808_emu: valid I2S pattern revoked until MCLK qualifies again
+BENCH: run 2 PASS
+BENCH: run 3/3: resetting Tab5 only
+[  38.154 mock] I (27139) si5351_emu: pointer <- 0x00
+[  38.155 mock] I (27149) si5351_emu: read  reg=0x00 -> 0x00
+[  38.155 mock] I (27149) si5351_emu: pointer <- 0x01
+[  38.155 mock] I (27149) si5351_emu: read  reg=0x01 -> 0x00
+[  38.155 mock] I (27169) si5351_emu: pointer <- 0x00
+[  38.155 mock] I (27169) si5351_emu: read  reg=0x00 -> 0x00
+[  38.155 mock] I (27179) si5351_emu: pointer <- 0x00
+[  38.155 mock] I (27179) si5351_emu: read  reg=0x00 -> 0x00
+[  38.155 mock] I (27179) si5351_emu: write start=0x03, bytes=1
+[  38.155 mock] I (27179) si5351_emu: ff
+[  38.155 mock] I (27179) si5351_emu: all clock outputs disabled (safe state)
+[  38.155 mock] I (27179) si5351_emu: pointer <- 0x03
+[  38.155 mock] I (27189) si5351_emu: read  reg=0x03 -> 0xFF
+[  38.155 mock] I (27189) si5351_emu: write start=0x10, bytes=8
+[  38.155 mock] I (27199) si5351_emu: 80 80 80 80 80 80 80 80
+[  38.155 mock] I (27199) si5351_emu: pointer <- 0x10
+[  38.155 mock] I (27199) si5351_emu: read  reg=0x10 -> 0x80
+[  38.155 mock] I (27209) si5351_emu: pointer <- 0x11
+[  38.155 mock] I (27209) si5351_emu: read  reg=0x11 -> 0x80
+[  38.155 mock] I (27209) si5351_emu: pointer <- 0x12
+[  38.155 mock] I (27219) si5351_emu: read  reg=0x12 -> 0x80
+[  38.155 mock] I (27219) si5351_emu: pointer <- 0x13
+[  38.155 mock] I (27229) si5351_emu: read  reg=0x13 -> 0x80
+[  38.155 tab5] ESP-ROM:esp32p4-eco2-20240710
+[  38.155 tab5] Build:Jul 10 2024
+[  38.155 tab5] rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+[  38.155 tab5] Core0 Saved PC:0x4ff02e9a
+[  38.155 tab5] Core1 Saved PC:0x4ff02e9a
+[  38.155 tab5] SPI mode:DIO, clock div:1
+[  38.155 tab5] load:0x4ff33ce0,len:0x17a4
+[  38.155 tab5] load:0x4ff29ed0,len:0xfc0
+[  38.155 tab5] load:0x4ff2cbd0,len:0x345c
+[  38.155 tab5] entry 0x4ff29eda
+[  38.155 tab5] I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+[  38.155 tab5] I (28) boot: compile time Sep  4 2026 07:27:37
+[  38.155 tab5] I (28) boot: Multicore bootloader
+[  38.155 tab5] I (29) boot: chip revision: v1.3
+[  38.155 tab5] I (31) boot: efuse block revision: v0.3
+[  38.155 tab5] I (34) qio_mode: Enabling default flash chip QIO
+[  38.155 tab5] I (39) boot.esp32p4: SPI Speed      : 80MHz
+[  38.155 tab5] I (42) boot.esp32p4: SPI Mode       : QIO
+[  38.155 tab5] I (46) boot.esp32p4: SPI Flash Size : 16MB
+[  38.155 tab5] I (50) boot: Enabling RNG early entropy source...
+[  38.155 tab5] I (55) boot: Partition Table:
+[  38.155 tab5] I (57) boot: ## Label            Usage          Type ST Offset   Length
+[  38.155 tab5] I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+[  38.155 tab5] I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+[  38.162 mock] I (27229) si5351_emu: pointer <- 0x14
+[  38.162 mock] I (27229) si5351_emu: read  reg=0x14 -> 0x80
+[  38.162 mock] I (27239) si5351_emu: pointer <- 0x15
+[  38.162 mock] I (27239) si5351_emu: read  reg=0x15 -> 0x80
+[  38.162 mock] I (27239) si5351_emu: pointer <- 0x16
+[  38.162 tab5] I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+[  38.162 tab5] I (84) boot: End of partition table
+[  38.162 tab5] I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0e758h ( 59224) map
+[  38.162 tab5] I (102) esp_image: segment 1: paddr=0001e780 vaddr=30100000 size=00044h (    68) load
+[  38.162 tab5] I (103) esp_image: segment 2: paddr=0001e7cc vaddr=4ff00000 size=0184ch (  6220) load
+[  38.162 tab5] I (110) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=25fe4h (155620) map
+[  38.162 tab5] I (136) esp_image: segment 4: paddr=0004600c vaddr=4ff0184c size=0f054h ( 61524) load
+[  38.162 tab5] I (147) esp_image: segment 5: paddr=00055068 vaddr=4ff10900 size=02358h (  9048) load
+[  38.162 tab5] I (153) boot: Loaded app from partition at offset 0x10000
+[  38.162 tab5] I (153) boot: Disabling RNG early entropy source...
+[  38.162 tab5] I (166) cpu_start: Multicore app
+[  38.162 tab5] I (177) cpu_start: Pro cpu start user code
+[  38.162 tab5] I (177) cpu_start: cpu freq: 360000000 Hz
+[  38.162 tab5] I (177) app_init: Application information:
+[  38.162 tab5] I (178) app_init: Project name:     tab5_dxft8_bringup
+[  38.162 tab5] I (182) app_init: App version:      fa60dc2-dirty
+[  38.168 mock] I (27249) si5351_emu: read  reg=0x16 -> 0x80
+[  38.168 tab5] I (186) app_init: Compile time:     Sep  7 2026 08:52:42
+[  38.168 tab5] I (191) app_init: ELF file SHA256:  6bc53455b...
+[  38.168 tab5] I (196) app_init: ESP-IDF:          v5.5.1
+[  38.168 tab5] I (200) efuse_init: Min chip rev:     v0.1
+[  38.168 tab5] I (203) efuse_init: Max chip rev:     v1.99
+[  38.168 tab5] I (207) efuse_init: Chip rev:         v1.3
+[  38.168 tab5] I (211) heap_init: Initializing. RAM available for dynamic allocation:
+[  38.168 tab5] I (217) heap_init: At 4FF143F0 len 00026BD0 (154 KiB): RAM
+[  38.168 tab5] I (223) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+[  38.168 tab5] I (228) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+[  38.168 tab5] I (233) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+[  38.168 tab5] I (238) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+[  38.168 tab5] I (244) spi_flash: detected chip: generic
+[  38.168 tab5] I (247) spi_flash: flash io: qio
+[  38.168 tab5] I (250) main_task: Started on CPU0
+[  38.169 tab5] I (260) main_task: Calling app_main()
+[  38.169 tab5] I (260) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+[  38.169 tab5] I (260) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+[  38.169 tab5] I (270) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+[  38.175 mock] I (27249) si5351_emu: pointer <- 0x17
+[  38.175 mock] I (27259) si5351_emu: read  reg=0x17 -> 0x80
+[  38.175 mock] I (27259) si5351_emu: write start=0x18, bytes=2
+[  38.175 tab5] W (270) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+[  38.175 tab5] I (290) tab5_bringup: probe PASS: found Si5351 at 0x60
+[  38.175 tab5] I (290) tab5_bringup: status PASS: device=0x00, interrupt=0x00
+[  38.176 tab5] I (300) si5351: 7.074 MHz register vectors match the reviewed design
+[  38.176 tab5] I (310) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+[  38.176 tab5] I (330) si5351: verified registers 0x03..0x03
+[  38.176 tab5] I (330) si5351: verified registers 0x10..0x17
+[  38.176 tab5] I (330) si5351: verified registers 0x18..0x19
+[  38.176 tab5] I (330) si5351: verified registers 0x0F..0x0F
+[  38.176 tab5] I (340) si5351: verified registers 0xB7..0xB7
+[  38.176 tab5] I (340) si5351: verified registers 0x1A..0x21
+[  38.176 tab5] I (350) si5351: verified registers 0x22..0x29
+[  38.176 tab5] I (350) si5351: verified registers 0x2A..0x31
+[  38.176 tab5] I (360) si5351: verified registers 0x32..0x39
+[  38.176 tab5] I (360) si5351: verified registers 0x10..0x10
+[  38.176 tab5] I (360) si5351: verified registers 0x11..0x11
+[  38.176 tab5] I (360) si5351: verified PLL reset strobe self-cleared
+[  38.182 mock] I (27259) si5351_emu: 00 00
+[  38.182 mock] I (27269) si5351_emu: pointer <- 0x18
+[  38.182 tab5] I (390) si5351: verified registers 0x03..0x03
+[  38.182 tab5] I (390) si5351: enabled output mask=0x02 (register 3=0xFD)
+[  38.182 tab5] I (390) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+[  38.182 tab5] W (390) tab5_bringup: TX CLOCK SELF-TEST ENABLED: use only with the mock or an unpowered PA
+[  38.187 mock] I (27269) si5351_emu: read  reg=0x18 -> 0x00
+[  38.193 mock] I (27269) si5351_emu: pointer <- 0x19
+[  38.193 mock] I (27279) si5351_emu: read  reg=0x19 -> 0x00
+[  38.200 mock] I (27279) si5351_emu: write start=0x0F, bytes=1
+[  38.200 mock] I (27279) si5351_emu: 00
+[  38.200 tab5] I (450) si5351: verified registers 0x03..0x03
+[  38.200 tab5] I (450) si5351: enabled output mask=0x03 (register 3=0xFC)
+[  38.206 mock] I (27289) si5351_emu: pointer <- 0x0F
+[  38.206 tab5] I (450) tab5_bringup: front-end clock state: TX-ready (CLK0 PA + CLK1 QSD on)
+[  38.213 mock] I (27289) si5351_emu: read  reg=0x0F -> 0x00
+[  38.220 mock] I (27289) si5351_emu: write start=0xB7, bytes=1
+[  38.221 mock] I (27299) si5351_emu: 12
+[  38.221 mock] I (27299) si5351_emu: pointer <- 0xB7
+[  38.221 mock] I (27299) si5351_emu: read  reg=0xB7 -> 0x12
+[  38.227 mock] I (27309) si5351_emu: write start=0x1A, bytes=8
+[  38.233 mock] I (27309) si5351_emu: 06 59 00 0d 3c 00 03 24
+[  38.233 mock] I (27319) si5351_emu: pointer <- 0x1A
+[  38.240 mock] I (27319) si5351_emu: read  reg=0x1A -> 0x06
+[  38.246 mock] I (27319) si5351_emu: pointer <- 0x1B
+[  38.247 mock] I (27329) si5351_emu: read  reg=0x1B -> 0x59
+[  38.247 tab5] I (500) si5351: verified registers 0x03..0x03
+[  38.247 tab5] I (500) si5351: enabled output mask=0x02 (register 3=0xFD)
+[  38.254 mock] I (27329) si5351_emu: pointer <- 0x1C
+[  38.254 mock] I (27329) si5351_emu: read  reg=0x1C -> 0x00
+[  38.254 mock] I (27339) si5351_emu: pointer <- 0x1D
+[  38.254 tab5] I (500) tab5_bringup: front-end clock state: RX (CLK1 QSD on)
+[  38.261 mock] I (27339) si5351_emu: read  reg=0x1D -> 0x0D
+[  38.261 tab5] I (500) tab5_bringup: RX/TX-ready/RX clock-state switching PASS
+[  38.261 tab5] I (510) tab5_bringup: SI5351 SELF-TEST PASS
+[  38.267 mock] I (27349) si5351_emu: pointer <- 0x1E
+[  38.267 mock] I (27349) si5351_emu: read  reg=0x1E -> 0x3C
+[  38.267 tab5] I (510) tab5_bringup: starting PCM1808-compatible I2S validation
+[  38.274 mock] I (27349) si5351_emu: pointer <- 0x1F
+[  38.274 tab5] I (520) pcm1808_i2s: configured I2S1 master RX: MCLK=GPIO16, BCLK=GPIO45, LRCK=GPIO3, DIN=GPIO4
+[  38.280 mock] I (27359) si5351_emu: read  reg=0x1F -> 0x00
+[  38.280 mock] I (27359) si5351_emu: pointer <- 0x20
+[  38.287 mock] I (27359) si5351_emu: read  reg=0x20 -> 0x03
+[  38.287 mock] I (27369) si5351_emu: pointer <- 0x21
+[  38.287 mock] I (27369) si5351_emu: read  reg=0x21 -> 0x24
+[  38.287 tab5] I (520) pcm1808_i2s: clocks: Fs=48000 Hz, MCLK=12288000 Hz (256fs), BCLK=3072000 Hz (64fs)
+[  38.300 mock] I (27379) pcm1808_emu: MCLK PASS: measured=12252736 Hz, expected=12288000 Hz
+[  38.300 mock] I (27379) si5351_emu: write start=0x22, bytes=8
+[  38.307 mock] I (27389) si5351_emu: 06 59 00 0d 3c 00 03 24
+[  38.313 mock] I (27389) si5351_emu: pointer <- 0x22
+[  38.313 mock] I (27389) si5351_emu: read  reg=0x22 -> 0x06
+[  38.319 mock] I (27399) si5351_emu: pointer <- 0x23
+[  38.326 mock] I (27399) si5351_emu: read  reg=0x23 -> 0x59
+[  38.326 mock] I (27409) si5351_emu: pointer <- 0x24
+[  38.326 mock] I (27409) si5351_emu: read  reg=0x24 -> 0x00
+[  38.332 mock] I (27409) si5351_emu: pointer <- 0x25
+[  38.333 mock] I (27419) si5351_emu: read  reg=0x25 -> 0x0D
+[  38.339 mock] I (27419) si5351_emu: pointer <- 0x26
+[  38.345 mock] I (27419) si5351_emu: read  reg=0x26 -> 0x3C
+[  38.346 mock] I (27429) si5351_emu: pointer <- 0x27
+[  38.352 mock] I (27429) si5351_emu: read  reg=0x27 -> 0x00
+[  38.359 mock] I (27439) si5351_emu: pointer <- 0x28
+[  38.359 mock] I (27439) si5351_emu: read  reg=0x28 -> 0x03
+[  38.359 mock] I (27439) si5351_emu: pointer <- 0x29
+[  38.366 mock] I (27449) si5351_emu: read  reg=0x29 -> 0x24
+[  38.372 mock] I (27449) si5351_emu: write start=0x2A, bytes=8
+[  38.372 mock] I (27449) si5351_emu: 00 01 00 36 00 00 00 00
+[  38.379 mock] I (27459) si5351_emu: pointer <- 0x2A
+[  38.385 mock] I (27459) si5351_emu: read  reg=0x2A -> 0x00
+[  38.385 mock] I (27469) si5351_emu: pointer <- 0x2B
+[  38.392 mock] I (27469) si5351_emu: read  reg=0x2B -> 0x01
+[  38.392 mock] I (27469) si5351_emu: pointer <- 0x2C
+[  38.392 mock] I (27479) si5351_emu: read  reg=0x2C -> 0x00
+[  38.393 tab5] I (640) pcm1808_i2s: mock pattern synchronized at sequence 0x0C36
+[  38.399 mock] I (27479) si5351_emu: pointer <- 0x2D
+[  38.405 mock] I (27479) si5351_emu: read  reg=0x2D -> 0x36
+[  38.405 mock] I (27489) si5351_emu: pointer <- 0x2E
+[  38.411 mock] I (27489) si5351_emu: read  reg=0x2E -> 0x00
+[  38.418 mock] I (27499) si5351_emu: pointer <- 0x2F
+[  38.418 mock] I (27499) si5351_emu: read  reg=0x2F -> 0x00
+[  38.424 mock] I (27499) si5351_emu: pointer <- 0x30
+[  38.431 mock] I (27509) si5351_emu: read  reg=0x30 -> 0x00
+[  38.431 mock] I (27509) si5351_emu: pointer <- 0x31
+[  38.431 mock] I (27509) si5351_emu: read  reg=0x31 -> 0x00
+[  38.438 mock] I (27519) si5351_emu: write start=0x32, bytes=8
+[  38.438 mock] I (27519) si5351_emu: 00 01 00 0c 00 00 00 00
+[  38.444 mock] I (27529) si5351_emu: pointer <- 0x32
+[  38.450 mock] I (27529) si5351_emu: read  reg=0x32 -> 0x00
+[  38.450 mock] I (27529) si5351_emu: pointer <- 0x33
+[  38.457 mock] I (27539) si5351_emu: read  reg=0x33 -> 0x01
+[  38.463 mock] I (27539) si5351_emu: pointer <- 0x34
+[  38.463 mock] I (27539) si5351_emu: read  reg=0x34 -> 0x00
+[  38.471 mock] I (27549) si5351_emu: pointer <- 0x35
+[  38.471 mock] I (27549) si5351_emu: read  reg=0x35 -> 0x0C
+[  38.471 mock] I (27559) si5351_emu: pointer <- 0x36
+[  38.478 mock] I (27559) si5351_emu: read  reg=0x36 -> 0x00
+[  38.484 mock] I (27559) si5351_emu: pointer <- 0x37
+[  38.484 mock] I (27569) si5351_emu: read  reg=0x37 -> 0x00
+[  38.491 mock] I (27569) si5351_emu: pointer <- 0x38
+[  38.496 mock] I (27569) si5351_emu: read  reg=0x38 -> 0x00
+[  38.496 mock] I (27579) si5351_emu: pointer <- 0x39
+[  38.502 mock] I (27579) si5351_emu: read  reg=0x39 -> 0x00
+[  38.510 mock] I (27579) si5351_emu: write start=0x10, bytes=1
+[  38.510 mock] I (27589) si5351_emu: 4f
+[  38.510 mock] I (27589) si5351_emu: pointer <- 0x10
+[  38.517 mock] I (27589) si5351_emu: read  reg=0x10 -> 0x4F
+[  38.517 mock] I (27599) si5351_emu: write start=0x11, bytes=1
+[  38.523 mock] I (27599) si5351_emu: 6f
+[  38.523 mock] I (27599) si5351_emu: pointer <- 0x11
+[  38.530 mock] I (27609) si5351_emu: read  reg=0x11 -> 0x6F
+[  38.536 mock] I (27609) si5351_emu: write start=0xB1, bytes=1
+[  38.537 mock] I (27619) si5351_emu: ac
+[  38.537 mock] I (27619) si5351_emu: pointer <- 0xB1
+[  38.543 mock] I (27619) si5351_emu: read  reg=0xB1 -> 0x00
+[  38.543 mock] I (27629) si5351_emu: pointer <- 0x00
+[  38.549 mock] I (27629) si5351_emu: read  reg=0x00 -> 0x00
+[  38.550 mock] I (27629) si5351_emu: pointer <- 0x00
+[  38.556 mock] I (27639) si5351_emu: read  reg=0x00 -> 0x00
+[  38.562 mock] I (27639) si5351_emu: pointer <- 0x00
+[  38.569 mock] I (27639) si5351_emu: read  reg=0x00 -> 0x00
+[  38.570 mock] I (27649) si5351_emu: write start=0x03, bytes=1
+[  38.577 mock] I (27649) si5351_emu: fd
+[  38.577 mock] I (27649) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[  38.583 mock] I (27659) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  38.590 mock] I (27669) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  38.596 mock] I (27679) si5351_emu: pointer <- 0x03
+[  38.602 mock] I (27679) si5351_emu: read  reg=0x03 -> 0xFD
+[  38.602 mock] I (27679) si5351_emu: write start=0x03, bytes=1
+[  38.608 mock] I (27689) si5351_emu: fc
+[  38.609 mock] I (27689) si5351_emu: front-end clock state TX-ready: CLK0 PA + CLK1 QSD enabled
+[  38.621 mock] I (27699) si5351_emu: CLK0 valid: PLLA=792288000 Hz, output=7074000 Hz, MS=112+0/1
+[  38.627 mock] I (27699) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  38.634 mock] I (27709) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  38.640 mock] I (27719) si5351_emu: pointer <- 0x03
+[  38.640 mock] I (27719) si5351_emu: read  reg=0x03 -> 0xFC
+[  38.646 mock] I (27729) si5351_emu: write start=0x03, bytes=1
+[  38.653 mock] I (27729) si5351_emu: fd
+[  38.653 mock] I (27729) si5351_emu: front-end clock state RX: CLK1 QSD enabled
+[  38.659 mock] I (27739) si5351_emu: CLK1 valid: PLLB=792288000 Hz, output=28296000 Hz, MS=28+0/1
+[  38.665 mock] I (27749) si5351_emu: PASS: Si5351 programming order, clock plan and state are valid
+[  38.672 mock] I (27749) si5351_emu: pointer <- 0x03
+[  38.672 mock] I (27759) si5351_emu: read  reg=0x03 -> 0xFD
+[  48.385 tab5] I (10630) pcm1808_i2s: mock-pattern PASS: 480000 continuous stereo frames
+[  48.391 tab5] I (10630) pcm1808_i2s: word format PASS: left/right order, Philips shift, 24-bit alignment, and zero padding
+[  48.397 tab5] I (10640) tab5_bringup: I2S SELF-TEST PASS: 480000 frames checked after 4800 startup frames
+[  48.403 tab5] I (10640) tab5_bringup: ALL ENABLED SELF-TESTS PASS; final RF clock state remains RX
+[  48.410 mock] W (37499) pcm1808_emu: MCLK out of tolerance: measured=4947263 Hz, expected=12288000 Hz (+/-5%)
+[  48.410 tab5] I (10650) main_task: Returned from app_main()
+[  48.416 mock] W (37499) pcm1808_emu: valid I2S pattern revoked until MCLK qualifies again
+BENCH: run 3 PASS
+BENCH PASS: 3 combined internal-I2C/I2S runs

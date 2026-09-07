@@ -1,14 +1,14 @@
 menu "TAB5 DXFT8 bring-up"
 
 config DXFT8_TAB5_I2C_SDA_GPIO
-    int "Port A SDA GPIO"
+    int "I2C SDA GPIO (M5-Bus default)"
     range 0 63
-    default 53
+    default 31
 
 config DXFT8_TAB5_I2C_SCL_GPIO
-    int "Port A SCL GPIO"
+    int "I2C SCL GPIO (M5-Bus default)"
     range 0 63
-    default 54
+    default 32
 
 config DXFT8_TAB5_I2C_FREQUENCY_HZ
     int "I2C clock frequency (Hz)"
@@ -17,10 +17,11 @@ config DXFT8_TAB5_I2C_FREQUENCY_HZ
 
 config DXFT8_TAB5_I2C_INTERNAL_PULLUPS
     bool "Enable ESP32-P4 internal I2C pull-ups"
-    default y
+    default n
     help
-        Suitable for the short Port A jumper used during bring-up.  The RF
-        daughter board should provide external pull-ups for production use.
+        The Tab5 internal bus on GPIO31/GPIO32 already has external pull-ups.
+        Enable for short Port A jumpers if using GPIO53/GPIO54 without
+        external pull-ups.
 
 config DXFT8_SI5351_ADDRESS
     hex "Si5351 7-bit I2C address"

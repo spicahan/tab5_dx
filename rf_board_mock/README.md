@@ -40,7 +40,29 @@ warns on unsafe initialization order, a TX-only `0xFE` clock state, enabled
 unused outputs, missing PLL reset, wrong source/control registers, or invalid
 PLL/MultiSynth parameters.
 
-## Immediate test: Tab5 factory demo Port A
+## Current internal M5-Bus I2C wiring
+
+The current host firmware uses the Tab5's internal system bus:
+
+| Tab5 M5-Bus | Signal | YD-ESP32-23 |
+| --- | --- | --- |
+| Pin 1 or pin 3 | Ground | GND |
+| Pin 17 / P4 GPIO31 | SDA | GPIO8 |
+| Pin 18 / P4 GPIO32 | SCL | GPIO9 |
+
+The Tab5 system bus has onboard 2.2 kOhm pull-ups to 3.3 V (R76/R93). Both
+boards' weak internal pull-ups are disabled. The mock needs no pin or address
+change when moving from Port A to this bus. Power both boards separately
+over USB, connect their grounds, and leave their power rails separate.
+
+If a different standalone master has no pull-ups, add removable 4.7 kOhm
+pull-ups from SDA and SCL to 3.3 V, or temporarily enable the weak ESP32-S3
+pull-ups in `menuconfig` for a short-wire bench test.
+
+Official Tab5 pin map:
+<https://docs.m5stack.com/en/core/Tab5>
+
+## Alternative: Tab5 factory demo Port A
 
 The Tab5 factory demo initializes its external Grove/Port A I2C controller on
 G53/G54 and enables its internal pull-ups. Use three wires only:
@@ -63,28 +85,15 @@ transaction line in the YD serial log; seeing `0x60` on the Tab5 is the test.
 Factory-demo source showing external SDA=G53 and SCL=G54:
 <https://github.com/m5stack/M5Tab5-UserDemo/blob/main/platforms/tab5/components/m5stack_tab5/m5stack_tab5.c>
 
-## Final RF-card I2C wiring
-
-The same YD firmware can later be moved to the RF-card M5-Bus signals:
-
-| Tab5 M5-Bus | Signal | YD-ESP32-23 |
-| --- | --- | --- |
-| Pin 1 or pin 3 | Ground | GND |
-| Pin 17 / P4 G31 | SDA | GPIO8 |
-| Pin 18 / P4 G32 | SCL | GPIO9 |
-
-The Tab5 system bus has 2.2 kOhm pull-ups to 3.3 V. Do not add another strong
-pair for the final wiring. If a different standalone master has no pull-ups,
-add removable 4.7 kOhm pull-ups from SDA and SCL to the YD board's 3.3 V rail,
-or temporarily enable the weak ESP32-S3 pull-ups in `menuconfig`.
-
-Official Tab5 pin map:
-<https://docs.m5stack.com/en/core/Tab5>
+To use the repository's Tab5 host firmware on Port A, restore its SDA/SCL
+configuration to GPIO53/GPIO54 and enable
+`CONFIG_DXFT8_TAB5_I2C_INTERNAL_PULLUPS` for the short-wire setup unless external
+pull-ups to 3.3 V are fitted. Keep the mock on GPIO8/GPIO9.
 
 ## PCM1808 I2S mock wiring
 
-Leave the I2C wires on Port A. Add the following M5-Bus connections, with a
-common ground and no connection between the boards' power rails:
+Alongside the current internal I2C wiring, add the following M5-Bus
+connections, with a common ground and separate power rails:
 
 | Tab5 M5-Bus | Direction | YD-ESP32-23 |
 | --- | --- | --- |
@@ -113,6 +122,9 @@ remains stopped. Those are idle states, not failures. The monitor samples
 frequently, only enables the pattern after an in-tolerance MCLK measurement,
 and changes to silence if MCLK is subsequently lost; therefore the Tab5 cannot
 pass with the MCLK wire omitted, including after an earlier successful run.
+The Tab5 discards 4,800 startup frames before synchronizing to the pattern.
+This clears buffered old samples and any silence/new-pattern transition when
+the Tab5 restarts while the mock remains running.
 
 With jumper wires, place optional 22–47 ohm series resistors at the driving
 end: Tab5 for MCLK/BCLK/LRCK and YD GPIO7 for DOUT. Keep wires short and pair
@@ -146,15 +158,30 @@ idf.py -p /dev/cu.YOUR_PORT flash monitor
 
 Exit the monitor with `Ctrl-]`.
 
-Expected startup output includes:
+After flashing both boards, close their serial monitors and run this from the
+repository root to reset the mock once and the Tab5 for each of three runs:
+
+```sh
+cd ~/tab5_dxft8
+python tools/bench_validate.py --mock /dev/cu.usbmodem5A7A0113341 --tab5 /dev/cu.usbmodem101 --runs 3
+```
+
+The runner streams both logs to the console and requires the host's internal
+I2C and I2S success messages plus independent Si5351 and MCLK checks by the
+mock and clock-loss detection after shutdown. Initial startup failures,
+firmware errors, and dropped transaction logs fail the runner.
+
+I2S is initialized before I2C becomes available. This prevents verbose I2C
+transaction logging from delaying I2S setup during simultaneous board startup.
+Expected startup output includes (task messages may interleave):
 
 ```text
 Tab5 DXFT8 RF-card mock - Si5351 + PCM1808 integration
-ready: address=0x60 (7-bit), SDA=GPIO8, SCL=GPIO9
-frequency decoder reference=26000000 Hz (active external reference on XA), register 183=0x12
+MCLK monitor: GPIO4, expected=12288000 Hz (+/-5%)
 PCM1808 I2S slave armed: BCLK=GPIO5, LRCK=GPIO6, DOUT=GPIO7
 format: 48000 Hz, Philips I2S, stereo, 24 valid bits in 32-bit slots, 64 BCLK/frame
-MCLK monitor: GPIO4, expected=12288000 Hz (+/-5%)
+ready: address=0x60 (7-bit), SDA=GPIO8, SCL=GPIO9
+frequency decoder reference=26000000 Hz (active external reference on XA), register 183=0x12
 Ready for the Tab5 I2C and I2S host tests
 ```
 

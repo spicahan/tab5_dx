@@ -35,8 +35,8 @@
 #define TAB5_SI5351_REFERENCE_DESCRIPTION "passive crystal (10 pF)"
 #endif
 
-#define TEST_I2C_TIMEOUT_MS 1000
 #define TEST_RF_HZ          7074000U
+#define DEVICE_READY_TIMEOUT_MS 2000U
 
 static const char *TAG = "tab5_bringup";
 
@@ -96,7 +96,7 @@ void app_main(void)
 {
     ESP_LOGI(TAG, "TAB5 DXFT8 Si5351 host self-test");
     ESP_LOGI(TAG,
-             "Port A: SDA=GPIO%d, SCL=GPIO%d, address=0x%02X",
+             "I2C host: SDA=GPIO%d, SCL=GPIO%d, address=0x%02X",
              CONFIG_DXFT8_TAB5_I2C_SDA_GPIO,
              CONFIG_DXFT8_TAB5_I2C_SCL_GPIO,
              CONFIG_DXFT8_SI5351_ADDRESS);
@@ -132,7 +132,17 @@ void app_main(void)
         stop_on_failure(NULL, "Si5351 handle initialization", error);
     }
 
-    error = si5351_probe(&clock, TEST_I2C_TIMEOUT_MS);
+    // The mock and real daughter board can become ready after the Tab5.
+    // Retry an absent/busy device for a bounded startup interval.
+    const TickType_t probe_started = xTaskGetTickCount();
+    do {
+        error = si5351_probe(&clock, 100);
+        if (error != ESP_ERR_NOT_FOUND && error != ESP_ERR_TIMEOUT) {
+            break;
+        }
+        vTaskDelay(pdMS_TO_TICKS(20));
+    } while ((xTaskGetTickCount() - probe_started) <
+             pdMS_TO_TICKS(DEVICE_READY_TIMEOUT_MS));
     if (error != ESP_OK) {
         stop_on_failure(&clock, "address probe", error);
     }

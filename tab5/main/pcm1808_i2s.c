@@ -18,6 +18,7 @@
 #define PCM1808_RX_BUFFER_WORDS         (PCM1808_RX_DMA_FRAMES * PCM1808_I2S_WORDS_PER_FRAME)
 #define PCM1808_READ_TIMEOUT_MS         1000U
 #define PCM1808_SYNC_SEARCH_FRAMES      2048U
+#define PCM1808_MOCK_DISCARD_FRAMES    4800U
 #define PCM1808_STARTUP_DISCARD_FRAMES  12000U
 
 static const char *TAG = "pcm1808_i2s";
@@ -191,10 +192,13 @@ esp_err_t pcm1808_i2s_validate_mock(pcm1808_i2s_t *device,
     ESP_RETURN_ON_FALSE(buffer != NULL, ESP_ERR_NO_MEM, TAG,
                         "allocate I2S receive buffer");
 
-    // Drain one complete RX DMA ring. It removes any startup samples captured
-    // before the mock's preloaded pattern reached the wire.
-    size_t warmup_remaining =
-        PCM1808_RX_DMA_DESCRIPTOR_COUNT * PCM1808_RX_DMA_FRAMES;
+    // Drain both sides of the bench link after clocks restart. The mock can
+    // retain 1,536 TX frames plus an in-flight write across a stopped clock;
+    // RX buffers another 1,440 frames. Its MCLK monitor also needs a polling
+    // interval to requalify. Draining only RX leaves a tail of old pattern
+    // followed by silence and causes a false continuity error on host reset.
+    // 4,800 frames covers those buffers and qualification at the default 48 kHz.
+    size_t warmup_remaining = PCM1808_MOCK_DISCARD_FRAMES;
     while (warmup_remaining > 0U) {
         const size_t requested = warmup_remaining < PCM1808_RX_DMA_FRAMES
                                      ? warmup_remaining
