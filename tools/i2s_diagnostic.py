@@ -19,9 +19,13 @@ def main():
     parser.add_argument("--seconds", type=float, default=10)
     parser.add_argument("--rf-clocks", choices=("off", "rx"), default="off",
                         help="Expected firmware clock state: all off or CLK1/QSD only")
+    parser.add_argument("--startup-ms", type=int, default=1000,
+                        help="Expected diagnostic startup discard at 48 kHz")
     args = parser.parse_args()
     if not 6 <= args.seconds <= 60:
         parser.error("capture duration must be between 6 and 60 seconds")
+    if not 0 <= args.startup_ms <= 5000:
+        parser.error("startup discard must be between 0 and 5000 milliseconds")
 
     port = serial.Serial(port=None, baudrate=115200, timeout=0.1)
     port.dtr = False
@@ -57,7 +61,10 @@ def main():
             expected_rf_state,
             "I2S DIAGNOSTIC ACTIVE: clocks remain on for probing",
             "MCLK=GPIO16, BCLK=GPIO45, LRCK=GPIO3, DIN=GPIO4",
-            "diagnostic startup discard: 48000 frames",
+            "clocks: Fs=48000 Hz",
+            f"diagnostic startup discard: {48 * args.startup_ms} frames",
+            "I2S INITIAL 100MS frames=4800 ",
+            "I2S FIRST CHANGE frame_offset ",
         ):
             if marker not in history:
                 raise RuntimeError(f"missing evidence: {marker}")
@@ -67,6 +74,7 @@ def main():
         if len(windows) != len(set(windows)):
             raise RuntimeError("repeated window numbers suggest an unexpected restart")
         print(f"DIAGNOSTIC HARNESS OK: {len(windows)} windows; RF clocks={args.rf_clocks}; "
+              f"startup={args.startup_ms} ms; "
               "ADC quality NOT certified; "
               "power and I2S clocks left running", flush=True)
         return 0

@@ -16,6 +16,13 @@ see the [diagnostic record](validation/2026-09-18-i2s.md).
 The [CLK1/QSD-on comparison](validation/2026-09-18-i2s-qsd-comparison.md) also
 completed three restarts with varying samples and zero padding errors while
 keeping the one-second startup wait unchanged.
+The [250 ms startup comparison](validation/2026-09-18-i2s-250ms-comparison.md)
+reproduced the original constant -1 short capture on all three restarts:
+both channels began changing about 108 ms after the discard, then continued
+with zero padding errors. This points to premature startup validation, not
+a persistently dead I2S link. The current diagnostic profile retains 250 ms
+to reproduce this result; use the previously tested one-second discard for
+normal bring-up acceptance pending wider startup testing.
 
 For the real RF daughter board's BS170s-absent 14.075 MHz scope test, use the
 [separate real-board profile](tab5/README.md#real-rf-board-14075-mhz-clk0-scope-test).

@@ -10,9 +10,10 @@ dependency.
 Use this profile for manual scope measurements, with BS170s still absent.
 Unlike the CLK0 scope profile (which disables I2S), it keeps the three I2S
 clocks and RF-board power on continuously. G48 and G47 stay HIGH. The current
-comparison-1 profile retains CLK1/QSD at 28.296 MHz (the original 7.074 MHz RX
-test plan); CLK0 and other outputs stay disabled. The one-second I2S startup
-discard and all I2S settings are unchanged from the all-RF-clocks-off baseline.
+comparison-2 profile retains CLK1/QSD at 28.296 MHz (the original 7.074 MHz RX
+test plan); CLK0 and other outputs stay disabled. Startup discard is now
+250 ms (12,000 frames), down from comparison 1's 1,000 ms (48,000 frames).
+I2S clocking, format and one-second statistics windows are unchanged.
 
 ```sh
 source ~/esp/esp-idf/export.sh
@@ -21,19 +22,29 @@ idf.py -B build-i2s-diag -D SDKCONFIG=sdkconfig.i2s-diag \
   -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.i2s-diag.defaults' build
 idf.py -B build-i2s-diag -p /dev/cu.usbmodem101 flash
 cd ..
-python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 10 --rf-clocks rx
+python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 10 --rf-clocks rx --startup-ms 250
 ```
 
-`DXFT8_I2S_DIAGNOSTIC_RX_CLOCK` selects this comparison. To restore the earlier
-all-Si5351-outputs-off baseline, disable that option in
-`idf.py -B build-i2s-diag menuconfig`, rebuild/flash, and pass `--rf-clocks off`
-to the runner. The runner verifies both the requested RF-clock state and the
-48,000-frame startup discard. Existing local sdkconfig settings override defaults.
+`DXFT8_I2S_DIAGNOSTIC_RX_CLOCK` controls CLK1. The separate
+`DXFT8_I2S_DIAGNOSTIC_STARTUP_MS` selects startup discard (0..5000 ms).
+To restore comparison 1, set startup to 1000 in
+`idf.py -B build-i2s-diag menuconfig`, rebuild/flash, and pass `--startup-ms 1000`
+to the runner. For the original all-Si5351-outputs-off baseline, also disable
+the RX-clock option and pass `--rf-clocks off`. The runner verifies the
+requested RF-clock state and startup frame count at 48 kHz. Existing local
+sdkconfig settings override defaults.
 
-The ADC diagnostic discards one second at startup, then continuously receives
-one-second windows. It logs raw 32-bit first/last samples, signed 24-bit
+The ADC diagnostic drains and discards the configured startup frames while
+clocks run, then continuously receives one-second windows. It logs raw 32-bit
+first/last samples, signed 24-bit
 minimum/maximum/mean, nonzero low padding bytes, and consecutive-word changes
-for each channel. A short raw dump from the first window helps inspect framing.
+for each channel. It separately summarizes the first 100 ms after discard,
+matching the original short capture duration, and reports the first change
+from the initial sample on each channel (zero-based post-discard frame offset;
+-1 means no change in the first one-second window). Extra prefix logs are
+deferred until the first window is complete. A short raw dump from that window
+helps inspect framing. Inspect the prefix as well as the full windows: a
+flat prefix can be hidden by later variation within a one-second window.
 Flat samples and padding anomalies produce warnings without shutting down
 power or clocks. Actual API/transport failures still stop the test and request
 power off. A running harness is **not** a passing ADC or analog-path test.

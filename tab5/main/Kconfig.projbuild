@@ -155,7 +155,7 @@ config DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
     help
         Continuously receive the PCM1808 while keeping G48 high and G47 high.
         By default all Si5351 outputs are off; the QSD comparison option below
-        retains CLK1 only. Allow one second for startup, then log
+        retains CLK1 only. Discard the configured startup interval, then log
         raw samples and one-second statistics. Flat samples and padding errors
         are reported without switching off the clocks needed for probing.
         Actual I2S API/read errors remain fatal. Bench use only with BS170s
@@ -170,7 +170,18 @@ config DXFT8_I2S_DIAGNOSTIC_RX_CLOCK
     help
         Controlled comparison against the all-RF-clocks-off diagnostic. Keep
         the original RX test clock CLK1=28.296 MHz enabled; CLK0 stays disabled.
-        The one-second startup discard and I2S settings are unchanged.
+        The startup discard is selected independently below; I2S settings
+        are unchanged.
+
+config DXFT8_I2S_DIAGNOSTIC_STARTUP_MS
+    int "Continuous diagnostic startup discard (milliseconds)"
+    depends on DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+    range 0 5000
+    default 1000
+    help
+        Comparison 1 used 1000 ms. Comparison 2 uses 250 ms with the same
+        CLK1/QSD and I2S settings. This controls discarded sample frames,
+        not a sleep: clocks run and RX is drained throughout the interval.
 
 config DXFT8_I2S_TEST_FRAMES
     int "Frames to validate/capture"

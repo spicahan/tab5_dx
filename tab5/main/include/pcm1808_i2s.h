@@ -86,15 +86,21 @@ esp_err_t pcm1808_i2s_capture_stats(pcm1808_i2s_t *device,
 
 /**
  * Continuously drain an enabled RX channel for oscilloscope-assisted bring-up.
- * Discard one second of startup frames, then report one-second sample windows
- * and a first-window raw sample dump. Flat samples or nonzero padding generate
+ * Discard startup_discard_ms (0..5000) of startup frames, rounded up to a
+ * complete frame, then report one-second sample windows and a first-window raw
+ * sample dump. The first 100 ms after discard is summarized separately at the
+ * end of the first window, without interrupting that prefix with logging.
+ * First-change offsets are zero-based from the first post-discard frame; -1
+ * means no change was observed in the first one-second window.
+ * Flat samples or nonzero padding generate
  * warnings only; clocks remain running and no ADC PASS is inferred. Consecutive
  * word-change counts apply to delivered samples within each window, not across
  * window boundaries; this does not verify DMA continuity or analog performance.
  * Returns only on an allocation, argument, or receive error; the caller owns
  * fail-closed shutdown. This function does not disable or release the channel.
  */
-esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device);
+esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device,
+                                      uint32_t startup_discard_ms);
 
 /** Stop clocks/RX and release the I2S channel. Safe on a zeroed handle. */
 esp_err_t pcm1808_i2s_deinit(pcm1808_i2s_t *device);

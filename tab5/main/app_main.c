@@ -306,7 +306,8 @@ void app_main(void)
 #if CONFIG_DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
     ESP_LOGI(TAG, "I2S DIAGNOSTIC ACTIVE: clocks remain on for probing; "
                   "flat data is reported, not treated as an ADC pass");
-    error = pcm1808_i2s_run_diagnostics(&adc);
+    error = pcm1808_i2s_run_diagnostics(&adc,
+                                      CONFIG_DXFT8_I2S_DIAGNOSTIC_STARTUP_MS);
     // The continuous diagnostic returns only on a transport/API failure.
     // Keep ordinary fail-closed handling for that failure, not sample quality.
     const esp_err_t cleanup_error = pcm1808_i2s_deinit(&adc);

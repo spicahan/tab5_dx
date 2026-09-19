@@ -414,20 +414,33 @@ esp_err_t pcm1808_i2s_capture_stats(pcm1808_i2s_t *device,
     return ESP_OK;
 }
 
-esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device)
+esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device,
+                                      uint32_t startup_discard_ms)
 {
     ESP_RETURN_ON_FALSE(device != NULL && device->rx_channel != NULL &&
                             device->enabled && device->sample_rate_hz > 0U,
                         ESP_ERR_INVALID_ARG, TAG,
                         "diagnostics require an enabled RX channel and sample rate");
+    ESP_RETURN_ON_FALSE(startup_discard_ms <= 5000U,
+                        ESP_ERR_INVALID_ARG, TAG,
+                        "diagnostic startup discard must be 0..5000 ms");
+    const uint64_t startup_frames =
+        ((uint64_t)device->sample_rate_hz * startup_discard_ms + 999U) / 1000U;
+    ESP_RETURN_ON_FALSE(startup_frames <= SIZE_MAX,
+                        ESP_ERR_INVALID_SIZE, TAG,
+                        "diagnostic startup discard frame count overflow");
+    const size_t initial_prefix_frames =
+        (size_t)(((uint64_t)device->sample_rate_hz + 9U) / 10U);
 
     uint32_t *buffer = malloc(PCM1808_RX_BUFFER_WORDS * sizeof(uint32_t));
     ESP_RETURN_ON_FALSE(buffer != NULL, ESP_ERR_NO_MEM, TAG,
                         "allocate diagnostic receive buffer");
 
     ESP_LOGI(TAG,
-             "I2S DIAGNOSTIC RUNNING: clocks remain enabled; settling for one second; not an ADC PASS");
-    size_t startup_remaining = device->sample_rate_hz;
+             "I2S DIAGNOSTIC RUNNING: clocks remain enabled; startup_discard_ms=%" PRIu32
+             " startup_discard_frames=%" PRIu64 "; not an ADC PASS",
+             startup_discard_ms, startup_frames);
+    size_t startup_remaining = (size_t)startup_frames;
     while (startup_remaining > 0U) {
         const size_t requested = startup_remaining < PCM1808_RX_DMA_FRAMES
                                      ? startup_remaining
@@ -441,8 +454,8 @@ esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device)
         }
         startup_remaining -= received;
     }
-    ESP_LOGI(TAG, "diagnostic startup discard: %" PRIu32 " frames",
-             device->sample_rate_hz);
+    ESP_LOGI(TAG, "diagnostic startup discard: %" PRIu64 " frames", startup_frames);
+    // Defer the additional prefix diagnostics until the first window is complete.
 
     uint64_t window = 0U;
     for (;;) {
@@ -460,6 +473,13 @@ esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device)
         uint32_t last_right = 0U;
         size_t left_changes = 0U;
         size_t right_changes = 0U;
+        int64_t first_left_change = -1;
+        int64_t first_right_change = -1;
+        pcm1808_capture_stats_t initial_stats = {0};
+        uint32_t initial_last_left = 0U;
+        uint32_t initial_last_right = 0U;
+        size_t initial_left_changes = 0U;
+        size_t initial_right_changes = 0U;
         uint32_t initial_frames[8U * PCM1808_I2S_WORDS_PER_FRAME] = {0};
         size_t initial_frame_count = 0U;
 
@@ -488,6 +508,14 @@ esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device)
                     first_left = left_word;
                     first_right = right_word;
                 } else {
+                    if (window == 0U && first_left_change < 0 &&
+                        left_word != last_left) {
+                        first_left_change = (int64_t)stats.frames_captured;
+                    }
+                    if (window == 0U && first_right_change < 0 &&
+                        right_word != last_right) {
+                        first_right_change = (int64_t)stats.frames_captured;
+                    }
                     left_changes += left_word != last_left;
                     right_changes += right_word != last_right;
                 }
@@ -518,10 +546,38 @@ esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device)
                 left_sum += left;
                 right_sum += right;
                 ++stats.frames_captured;
+                if (window == 0U && stats.frames_captured == initial_prefix_frames) {
+                    initial_stats = stats;
+                    initial_stats.left_mean = left_sum / (int64_t)stats.frames_captured;
+                    initial_stats.right_mean = right_sum / (int64_t)stats.frames_captured;
+                    initial_last_left = left_word;
+                    initial_last_right = right_word;
+                    initial_left_changes = left_changes;
+                    initial_right_changes = right_changes;
+                }
             }
         }
 
         ++window;
+        if (window == 1U) {
+            ESP_LOGI(TAG,
+                     "I2S INITIAL 100MS frames=%u padding_nonzero=%u; "
+                     "L[min=%" PRId32 " max=%" PRId32 " mean=%" PRId64 " changes=%u] "
+                     "R[min=%" PRId32 " max=%" PRId32 " mean=%" PRId64 " changes=%u]; "
+                     "raw first=%08" PRIX32 "/%08" PRIX32
+                     " last=%08" PRIX32 "/%08" PRIX32 " (L/R)",
+                     (unsigned)initial_stats.frames_captured,
+                     (unsigned)initial_stats.nonzero_padding_words,
+                     initial_stats.left_min, initial_stats.left_max,
+                     initial_stats.left_mean, (unsigned)initial_left_changes,
+                     initial_stats.right_min, initial_stats.right_max,
+                     initial_stats.right_mean, (unsigned)initial_right_changes,
+                     first_left, first_right, initial_last_left, initial_last_right);
+            ESP_LOGI(TAG,
+                     "I2S FIRST CHANGE frame_offset L=%" PRId64 " R=%" PRId64
+                     " (zero-based post-discard; -1=no change in first window)",
+                     first_left_change, first_right_change);
+        }
         stats.left_mean = left_sum / (int64_t)stats.frames_captured;
         stats.right_mean = right_sum / (int64_t)stats.frames_captured;
         ESP_LOGI(TAG,
