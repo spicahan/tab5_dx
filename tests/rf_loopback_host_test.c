@@ -132,6 +132,116 @@ static void check_channel(char channel, int32_t minimum, int32_t maximum,
     assert(actual_rails == rails);
 }
 
+static void check_empty_result(const rf_loopback_result_t *result)
+{
+    const unsigned char *bytes = (const unsigned char *)result;
+    for (size_t index = 0U; index < sizeof(*result); ++index) {
+        assert(bytes[index] == 0U);
+    }
+    assert(output_used == 0U);
+}
+
+static void test_bounded_capture(pcm1808_i2s_t *adc)
+{
+    const uint32_t capture_windows[] = {50U, 100U, 200U, 250U, 1000U};
+    rf_loopback_result_t result;
+    for (size_t window = 0U; window < sizeof(capture_windows) / sizeof(capture_windows[0]); ++window) {
+        const uint32_t capture_ms = capture_windows[window];
+        const size_t capture_frames = (size_t)capture_ms * 48U;
+        for (size_t harmonic = 0U; harmonic < 2U; ++harmonic) {
+            reset_test(harmonic == 0U ? TONE_1K : TONE_2K);
+            assert(rf_loopback_capture(adc, 1000U, capture_ms, &result) == ESP_OK);
+            assert(output_used == 0U);
+            assert(sample_index == 48000U + capture_frames);
+            assert(result.capture_ms == capture_ms);
+            assert(result.frames_captured == capture_frames);
+            assert(result.discard_frames == 48000U);
+            assert(result.nonzero_padding_words == 0U);
+            assert(result.channels[0].rail_hits == 0U);
+            assert(result.channels[1].rail_hits == 0U);
+            assert(fabs(result.channels[0].dc - 2000000.0) < 0.01);
+            assert(fabs(result.channels[1].dc + 2000000.0) < 0.01);
+            assert(fabs(result.channels[0].rms_ac - 1000000.0 / sqrt(2.0)) < 1.0);
+            assert(fabs(result.channels[1].rms_ac - 500000.0 / sqrt(2.0)) < 1.0);
+            const rf_loopback_tone_result_t *tone = &result.tones[harmonic];
+            assert(tone->frequency_hz == (harmonic + 1U) * 1000U);
+            assert(fabs(tone->peak[0] - 1000000.0) < 1.0);
+            assert(fabs(tone->peak[1] - 500000.0) < 1.0);
+            assert(fabs(tone->dbfs[0] - 20.0 * log10(1000000.0 / 8388608.0)) < 0.01);
+            assert(fabs(tone->dbfs[1] - 20.0 * log10(500000.0 / 8388608.0)) < 0.01);
+            assert(fabs(tone->relative_phase_degrees - 90.0) < 0.01);
+            assert(result.tones[1U - harmonic].peak[0] < 1.0);
+            assert(result.tones[1U - harmonic].peak[1] < 1.0);
+
+            // Reporting is a separate action and cannot add sample reads.
+            assert(rf_loopback_report("BOUNDED", &result) == ESP_OK);
+            assert(sample_index == 48000U + capture_frames);
+            check_tone((unsigned)((harmonic + 1U) * 1000U),
+                       1000000.0, 500000.0, 90.0);
+        }
+
+        reset_test(RAILS);
+        add_padding = 1;
+        assert(rf_loopback_capture(adc, 0U, capture_ms, &result) == ESP_OK);
+        assert(output_used == 0U);
+        assert(result.nonzero_padding_words == capture_frames * 2U);
+        assert(result.channels[0].rail_hits == capture_frames);
+        assert(result.channels[1].rail_hits == capture_frames);
+        assert(rf_loopback_report("BOUNDED_RAILS", &result) == ESP_OK);
+        assert(strstr(output, "sample warning") != NULL);
+
+        reset_test(CONSTANT);
+        assert(rf_loopback_measure_window(adc, "BOUNDED_DC", 250U, capture_ms) == ESP_OK);
+        assert(sample_index == 12000U + capture_frames);
+        check_channel('L', -1, -1, -1.0, 0.0, 0U);
+        check_channel('R', 8000000, 8000000, 8000000.0, 0.0, 0U);
+        check_tone(1000U, 0.0, 0.0, 0.0);
+        check_tone(2000U, 0.0, 0.0, 0.0);
+    }
+
+    reset_test(SILENCE);
+    memset(&result, 0xA5, sizeof(result));
+    assert(rf_loopback_capture(NULL, 0U, 100U, &result) == ESP_ERR_INVALID_ARG);
+    check_empty_result(&result);
+    assert(rf_loopback_capture(adc, 0U, 100U, NULL) == ESP_ERR_INVALID_ARG);
+    assert(rf_loopback_capture(adc, 5001U, 100U, &result) == ESP_ERR_INVALID_ARG);
+    check_empty_result(&result);
+    const uint32_t invalid_windows[] = {0U, 1U, 99U, 101U, 249U, 251U, 999U, 1001U, UINT32_MAX};
+    for (size_t index = 0U; index < sizeof(invalid_windows) / sizeof(invalid_windows[0]); ++index) {
+        assert(rf_loopback_capture(adc, 0U, invalid_windows[index], &result) == ESP_ERR_INVALID_ARG);
+        check_empty_result(&result);
+    }
+    adc->sample_rate_hz = 44100U;
+    assert(rf_loopback_capture(adc, 0U, 100U, &result) == ESP_ERR_INVALID_ARG);
+    check_empty_result(&result);
+    adc->sample_rate_hz = 48000U;
+    adc->enabled = false;
+    assert(rf_loopback_capture(adc, 0U, 100U, &result) == ESP_ERR_INVALID_STATE);
+    check_empty_result(&result);
+    adc->enabled = true;
+    assert(rf_loopback_report(NULL, &result) == ESP_ERR_INVALID_ARG);
+    assert(rf_loopback_report("", &result) == ESP_ERR_INVALID_ARG);
+    assert(rf_loopback_report("BAD", NULL) == ESP_ERR_INVALID_ARG);
+    assert(rf_loopback_report("BAD", &result) == ESP_ERR_INVALID_ARG);
+    assert(output_used == 0U);
+
+    for (unsigned behavior = 1U; behavior <= 2U; ++behavior) {
+        read_behavior = behavior;
+        assert(rf_loopback_capture(adc, 0U, 100U, &result) == ESP_ERR_INVALID_SIZE);
+        check_empty_result(&result);
+    }
+    reset_test(SILENCE);
+    fail_at_frame = 137U;
+    assert(rf_loopback_capture(adc, 1000U, 100U, &result) == ESP_ERR_TIMEOUT);
+    check_empty_result(&result);
+    reset_test(SILENCE);
+    fail_at_frame = 48000U + 137U;
+    assert(rf_loopback_capture(adc, 1000U, 100U, &result) == ESP_ERR_TIMEOUT);
+    check_empty_result(&result);
+    assert(rf_loopback_report("FAILED_CAPTURE", &result) == ESP_ERR_INVALID_ARG);
+    assert(output_used == 0U);
+}
+
 int main(void)
 {
     pcm1808_i2s_t adc = {
@@ -196,6 +306,7 @@ int main(void)
     fail_at_frame = 48000U + 137U;
     assert(rf_loopback_measure(&adc, "CAPTURE_TIMEOUT", 1000U) == ESP_ERR_TIMEOUT);
 
-    puts("rf_loopback host tests passed: quadrature 1/2 kHz, DC, silence, clipping, padding, invalid arguments, partial reads, and errors");
+    test_bounded_capture(&adc);
+    puts("rf_loopback host tests passed: 50/100/200/250/1000 ms quiet capture and deferred report, quadrature 1/2 kHz, DC, silence, clipping, padding, invalid arguments, partial reads, and errors");
     return 0;
 }

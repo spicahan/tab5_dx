@@ -1,6 +1,8 @@
 idf_component_register(
     SRCS
         "app_main.c"
+        "pa_test.c"
+        "pa_policy.c"
         "pcm1808_i2s.c"
         "rf_loopback.c"
         "si5351.c"
@@ -10,4 +12,7 @@ idf_component_register(
         esp_driver_gpio
         esp_driver_i2c
         esp_driver_i2s
+        esp_driver_usb_serial_jtag
+        esp_timer
+        nvs_flash
 )

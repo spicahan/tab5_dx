@@ -5,6 +5,140 @@ real Si5351A and PCM1808 from the M5Stack Tab5. It is a UART-only bring-up
 program with no GUI, M5GFX, M5Unified, Wi-Fi, or other managed-component
 dependency.
 
+## Manual 40 m PA test (populated BS170s)
+
+Use `sdkconfig.pa.defaults` for a board with the BS170s installed. This profile
+bypasses the old automatic bring-up entirely: boot does not enable RF power
+or CLK0. It holds **G48 LOW (power off), G47 LOW (RX disconnected)** while
+disarmed. G47 stays LOW during preparation, the burst, cleanup, and idle; this
+is deliberately not the earlier G47-HIGH receive-loopback test.
+
+The band/frequency and wiring are fixed: 40 m, CLK0 at **7.075 MHz**, a 26 MHz
+external Si5351 reference, internal M5-Bus I2C SDA/G31 and SCL/G32 at 100 kHz,
+and G48/G47 power/RX-switch controls. Optional leakage capture uses the same
+I2S pins as the earlier real-board test: MCLK/G16, BCLK/G45, LRCK/G3, DOUT/G4.
+Disconnect the mock board; it has the same I2C address. RF power still needs
+the proper battery-positive lead or DC supply: G48 is an enable, not a power
+source. Check polarity, common ground and connector orientation.
+
+### Install and connect safely
+
+Flash with the RF board disconnected and unpowered. The older `build-loopback`
+and `build-scope` images automatically enable a carrier and must not be used
+with the populated PA. Use this separate build/configuration pair:
+
+```sh
+source ~/esp/esp-idf/export.sh
+cd ~/tab5_dx/tab5
+idf.py -B build-pa -D SDKCONFIG=sdkconfig.pa \
+  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.pa.defaults' build
+idf.py -B build-pa -p /dev/cu.usbmodem101 flash
+idf.py -B build-pa -p /dev/cu.usbmodem101 monitor
+```
+
+Existing `sdkconfig.pa` settings override defaults. Confirm the startup log
+identifies `PA TEST READY: DISARMED`, G48/G47 LOW, and the power-off ISR
+self-check passes. That self-check does not exercise or verify the physical
+RF power switch, and disconnected-board boot is not a PA or RF-output test.
+
+Power down **all** sources (battery, USB and external supply) before connecting
+the RF board, LPF, dummy load, or test probes. Fit the **40 m LPF** and a
+suitably rated **50-ohm dummy load** at the antenna output; do not attach an
+antenna for this test. Use a current-limited supply where practical and monitor
+current and heating. The firmware does not measure LPF identity, load presence,
+output power, SWR, current or temperature; the arming phrase is only the
+operator's confirmation, not an electrical interlock.
+
+### One manually requested burst
+
+Connect a USB serial console. Enter `status` to verify it is disarmed. Type
+this command and wait for the `PA ARMED` reply:
+
+```text
+arm 40m dummyload
+```
+
+Then enter the burst command **separately**, within 30 seconds:
+
+```text
+pa 100
+```
+
+Do not paste or queue multiple commands. A complete arming confirmation is
+required again for every attempt, and there is a five-second cooldown after
+each job, including failed preparation. `pa` defaults to `pa 100`; `pa 250`
+permits the longer guarded test after inspecting the first result. No continuous
+TX or automatic repeat is provided. Invalid/rejected commands disarm, and
+`help` or `status` never extends the arming expiry.
+
+For ordinary `pa`, CLK1 is off during the burst. The firmware programs and
+checks the clock plan with CLK0 off, arms an independent timer, then enables
+CLK0. It normally requests clock shutdown after about 80/230 ms for the
+100/250 ms selections, leaving time for the I2C shutdown before the timer
+requests G48 LOW. Those are software timing targets, **not measured RF pulse
+widths**. The logged command interval is also not an RF-envelope measurement.
+No claim of RF output power, PA efficiency, or hardware protection follows
+from `PA JOB COMPLETE`.
+
+`off` disarms and requests power off. During an active job, any received USB
+input other than CR/LF-only terminators requests immediate power cutoff;
+do not type `status` while a burst/preparation is running. The console also
+recognizes Ctrl-C/Escape, although a terminal program may intercept those keys.
+The independent 100/250 ms burst guard does not depend on receiving keyboard
+input; preparation has its own three-second guard. Closing the monitor is not
+an emergency power disconnect.
+
+### Optional TX-state leakage capture
+
+After a satisfactory ordinary PA check, arm again and separately enter
+`leak 100` (or later `leak 250`). G47 remains LOW. CLK1 runs at 28.296 MHz,
+corresponding to 7.074 MHz receive mixing; CLK0 remains 7.075 MHz, so a coupled
+response may appear at 1 kHz. This intentionally retains CLK1 during TX only
+for the diagnostic, unlike ordinary `pa`.
+
+Before keying, I2S starts at 48 kHz and discards **one second** with CLK0 OFF,
+then records a 100 ms background measurement. A baseline with nonzero padding
+or exact ADC rail hits prevents keying. During the burst, the test drains
+35 ms to clear stale DMA samples, then captures 50/200 ms for the 100/250 ms
+guard settings. Capture statistics and 1/2 kHz tone estimates print only after
+the normal RF-off request; the underlying driver can still report transfer
+errors. Any capture or clock error requests shutdown, without automatic retry.
+
+Compare `PA_OFF_BASELINE` and `PA_KEYED_LEAK`, checking padding, rail hits and
+whether the 1 kHz tone is above background. This is a **TX-state leakage
+observation, not normal RX sensitivity or input-path validation**: the RX switch
+is open, the physical coupling route is unknown, and absence of a tone may
+mean good isolation. Short windows do not guarantee analog settling or sample
+continuity, and no rail hits does not exclude clipping elsewhere. Leakage
+amplitude is not a universal board pass/fail threshold.
+
+### Shutdown and faults
+
+Every completed/failed job requests G48 LOW and keeps G47 LOW. Cleanup stops
+I2S, resets its pins and disables their pulls to reduce back-powering. Normal shutdown
+also verifies Si5351 register 3 is `0xFF` before removing power. Before RF power
+is enabled, a persistent pending marker is saved; it is cleared after cleanup
+only when power was never applied, or a verified clock-off state was not
+followed by an attempted CLK0 enable, or final clock shutdown was verified. No
+flash/NVS writes take place during the keyed window. An uncertain shutdown or
+reset interrupting a job therefore leaves a persistent fault that refuses
+rearming, including after a serial reset or ordinary reboot.
+Failure to contact the Si5351 after applying power also latches a fault,
+because the firmware could not verify its initial output-off state.
+
+After that fault, disconnect **all hardware power sources**, including RF
+battery/DC and Tab5 USB/battery power, and allow the rails to discharge before
+reconnecting and booting. Disconnect signal/back-power connections as needed
+to make the RF board genuinely unpowered. Diagnose the logged failure first.
+After that full power cycle and safe reassembly, boot disarmed and enter
+`clearfault powercycled` to acknowledge the recovery manually; the firmware
+does not sense that a power cycle occurred. A Tab5 reset or USB reconnection
+alone neither clears the stored fault nor proves the RF board lost power.
+G48 LOW requests a switch action; it does not prove zero rail voltage or
+immediate RF cessation because of capacitance,
+back-power paths, GPIO reset states or hardware faults. Suitable hardware
+default biasing and physical power removal remain necessary.
+
 ## RX leakage loopback (BS170s absent)
 
 The final `TAB5 DX RF V1.11 CIRCUIT SCHEMATIC.pdf` supplied by Barb separates

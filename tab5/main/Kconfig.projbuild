@@ -1,5 +1,17 @@
 menu "TAB5 DXFT8 bring-up"
 
+config DXFT8_PA_TEST
+    bool "Manual 40 m populated-PA bench console (disarmed boot)"
+    depends on DXFT8_REAL_RF_BOARD
+    default n
+    help
+        Bypasses all automatic bring-up and leakage-loopback startup.
+        G48 LOW and G47 LOW at boot. USB commands manually arm one bounded
+        100/250 ms burst at 7.075 MHz. Separate optional leakage command
+        enables CLK1 but never switches G47 HIGH. No LPF/load/current sensing:
+        operator must fit a 40 m LPF and rated 50-ohm dummy load, no antenna.
+        Software cutoff is not a hardware RF interlock or protection guarantee.
+
 config DXFT8_REAL_RF_BOARD
     bool "Power the real RF daughter board (G48) and hold RX selected (G47)"
     default n
@@ -11,6 +23,7 @@ config DXFT8_REAL_RF_BOARD
 config DXFT8_SCOPE_CLK0_CARRIER
     bool "Leave CLK0 at 14.075 MHz after successful checks (BS170s absent only)"
     depends on DXFT8_REAL_RF_BOARD
+    depends on !DXFT8_PA_TEST
     depends on !DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
     default n
     help
@@ -95,6 +108,7 @@ menu "PCM1808 I2S validation"
 config DXFT8_RUN_I2S_SELF_TEST
     bool "Run the I2S validation after the Si5351 test"
     default y
+    depends on !DXFT8_PA_TEST
     help
         Starts the ESP32-P4 as I2S master RX on the RF-card M5-Bus pins.
         Disable this to retain an I2C-only test when the I2S wires are absent.

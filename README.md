@@ -2,6 +2,22 @@
 
 Working directory: `~/tab5_dx` (renamed from `~/tab5_dxft8`; Git history kept).
 
+For the populated BS170 PA, use the new
+[manual 40 m PA test profile](tab5/README.md#manual-40-m-pa-test-populated-bs170s),
+not the older automatic scope or RX-loopback builds. It boots with G48/G47 LOW
+and stays disarmed until the operator confirms a 40 m LPF and rated 50-ohm
+dummy load, then explicitly requests one short 7.075 MHz burst. G47 never
+switches to RX during this test. An optional `leak` command runs the QSD/ADC
+to observe TX-state leakage; its one-second ADC startup occurs with CLK0 OFF.
+No LPF, load, current or temperature interlock is implemented. These are
+bench-test controls, not a production PA-protection system or measured RF
+performance results. Flash with the RF board disconnected/unpowered, and
+power everything off before reconnecting it. See the linked instructions for
+commands, cooldown, cancellation, and fault recovery.
+The [disconnected-console validation](validation/2026-09-19-pa-console.md)
+records the flashed image and passing startup/command checks; PA output has
+not yet been measured.
+
 The [BS170-absent RX leakage loopback](tab5/README.md#rx-leakage-loopback-bs170s-absent)
 keeps G47 HIGH/RX selected and compares CLK0 OFF with 1/2 kHz offset carriers
 while CLK1 and I2S run. It uses a one-second discard and is not powered-PA

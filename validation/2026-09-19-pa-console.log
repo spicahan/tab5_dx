@@ -1,0 +1,143 @@
+
+PA VALIDATE: resetting expected PA-test firmware; no RF performance test is authorized
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff03592
+Core1 Saved PC:0x4ff03592
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x17a4
+load:0x4ff29ed0,len:0xfc0
+load:0x4ff2cbd0,len:0x345c
+entry 0x4ff29eda
+I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+I (28) boot: compile time Sep 19 2026 10:14:15
+I (28) boot: Multicore bootloader
+I (29) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (34) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 80MHz
+I (42) boot.esp32p4: SPI Mode       : QIO
+I (46) boot.esp32p4: SPI Flash Size : 16MB
+I (50) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (57) boot: ## Label            Usage          Type ST Offset   Length
+I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+I (84) boot: End of partition table
+I (86) esp_image: segment 0: paddr=00010020 vaddr=40040020 size=103b8h ( 66488) map
+I (103) esp_image: segment 1: paddr=000203e0 vaddr=30100000 size=00044h (    68) load
+I (104) esp_image: segment 2: paddr=0002042c vaddr=4ff00000 size=0fbech ( 64492) load
+I (119) esp_image: segment 3: paddr=00030020 vaddr=40000020 size=30774h (198516) map
+I (145) esp_image: segment 4: paddr=0006079c vaddr=4ff0fbec size=02c90h ( 11408) load
+I (148) esp_image: segment 5: paddr=00063434 vaddr=4ff12880 size=02468h (  9320) load
+I (155) boot: Loaded app from partition at offset 0x10000
+I (155) boot: Disabling RNG early entropy source...
+I (172) cpu_start: Multicore app
+I (183) cpu_start: Pro cpu start user code
+I (183) cpu_start: cpu freq: 360000000 Hz
+I (183) app_init: Application information:
+I (183) app_init: Project name:     tab5_dxft8_bringup
+I (188) app_init: App version:      1fc8a41-dirty
+I (192) app_init: Compile time:     Sep 19 2026 10:14:07
+I (197) app_init: ELF file SHA256:  43d84f21f...
+I (202) app_init: ESP-IDF:          v5.5.1
+I (205) efuse_init: Min chip rev:     v0.1
+I (209) efuse_init: Max chip rev:     v1.99 
+I (213) efuse_init: Chip rev:         v1.3
+I (217) heap_init: Initializing. RAM available for dynamic allocation:
+I (223) heap_init: At 4FF164D0 len 00024AF0 (146 KiB): RAM
+I (228) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (234) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+I (239) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+I (244) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+I (250) spi_flash: detected chip: generic
+I (253) spi_flash: flash io: qio
+I (256) main_task: Started on CPU0
+I (266) main_task: Calling app_main()
+I (296) pa_test: PA GUARD SELF-CHECK PASS: ISR fired with RF power held off
+I (296) pa_test: PA TEST READY: DISARMED; G48=LOW G47=LOW; fixed 40m; no boot TX
+I (296) pa_test: PA COMMANDS: status | help | off | arm 40m dummyload | pa [100|250] | leak [100|250] | clearfault powercycled
+W (306) pa_test: 40m FIXED 7075000 Hz. Fit 40m LPF + rated 50-ohm dummy load; no antenna. Band/load/current/temperature are NOT sensed.
+I (316) pa_test: Arm lasts 30s, one use; 5s cooldown; non-newline USB input during a job requests power off. No continuous TX or automatic repeat.
+I (326) pa_test: PA STATUS: DISARMED; G48=0 G47=0; band=40m source=7075000 Hz; cooldown_ms=0; shutdown_fault=none
+
+PA VALIDATE: send b'status\n'
+I (616) pa_test: PA STATUS: DISARMED; G48=0 G47=0; band=40m source=7075000 Hz; cooldown_ms=0; shutdown_fault=none
+
+PA VALIDATE: send b'pa\n'
+W (826) pa_test: PA REJECTED: not armed
+
+PA VALIDATE: send b'leak\n'
+W (1036) pa_test: PA REJECTED: not armed
+
+PA VALIDATE: send b'arm 20m dummyload\n'
+W (1246) pa_test: PA REJECTED: invalid command (disarmed)
+
+PA VALIDATE: send b'clearfault rebooted\n'
+W (1456) pa_test: PA REJECTED: invalid command (disarmed)
+
+PA VALIDATE: send b'arm 40m dummyload\n'
+W (1666) pa_test: PA ARMED: one use, expires in 30s; RF remains OFF; send pa or leak separately
+
+PA VALIDATE: send b'status\n'
+I (1876) pa_test: PA STATUS: ARMED; G48=0 G47=0; band=40m source=7075000 Hz; cooldown_ms=0; shutdown_fault=none
+
+PA VALIDATE: send b'off\n'
+I (2086) pa_test: PA OFF: disarmed
+
+PA VALIDATE: send b'status\n'
+I (2296) pa_test: PA STATUS: DISARMED; G48=0 G47=0; band=40m source=7075000 Hz; cooldown_ms=0; shutdown_fault=none
+
+PA VALIDATE: send b'arm 40m dummyload\n'
+W (2506) pa_test: PA ARMED: one use, expires in 30s; RF remains OFF; send pa or leak separately
+
+PA VALIDATE: send b'pa 1000\n'
+W (2726) pa_test: PA REJECTED: invalid command (disarmed)
+
+PA VALIDATE: send b'pa\n'
+W (2936) pa_test: PA REJECTED: not armed
+
+PA VALIDATE: send b'arm 40m dummyload\n'
+W (3146) pa_test: PA ARMED: one use, expires in 30s; RF remains OFF; send pa or leak separately
+
+PA VALIDATE: send b'arm 40m dummyload\x00\n'
+W (3356) pa_test: PA REJECTED: invalid command (disarmed)
+
+PA VALIDATE: send b'pa\n'
+W (3566) pa_test: PA REJECTED: not armed
+
+PA VALIDATE: send b'arm 40m dummyload\n'
+W (3786) pa_test: PA ARMED: one use, expires in 30s; RF remains OFF; send pa or leak separately
+
+PA VALIDATE: send b'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n'
+W (3996) pa_test: PA REJECTED: invalid command (disarmed)
+
+PA VALIDATE: send b'pa\n'
+W (4196) pa_test: PA REJECTED: not armed
+
+PA VALIDATE: send b'arm 40m dummyload\nstatus\n'
+W (4406) pa_test: PA REJECTED: invalid command (disarmed)
+
+PA VALIDATE: send b'pa\n'
+W (4616) pa_test: PA REJECTED: not armed
+
+PA VALIDATE: send b'arm 40m dummyload\n'
+W (4826) pa_test: PA ARMED: one use, expires in 30s; RF remains OFF
+PA VALIDATE: waiting 31 seconds for the arm token to expire; RF remains off
+; send pa or leak separately
+
+PA VALIDATE: send b'pa\n'
+W (36046) pa_test: PA REJECTED: arm expired
+
+PA VALIDATE: send b'status\n'
+I (36256) pa_test: PA STATUS: DISARMED; G48=0 G47=0; band=40m source=7075000 Hz; cooldown_ms=0; shutdown_fault=none
+
+PA VALIDATE: send b'off\n'
+I (36456) pa_test: PA OFF: disarmed
+
+PA VALIDATE: send b'status\n'
+I (36666) pa_test: PA STATUS: DISARMED; G48=0 G47=0; band=40m source=7075000 Hz; cooldown_ms=0; shutdown_fault=none
+
+PA VALIDATE: PASS: console/policy evidence only; left DISARMED, G48/G47 reported LOW; shutdown_fault=none; accepted jobs=0; RF/PA output NOT tested

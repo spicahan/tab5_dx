@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: MIT
 
+#include "sdkconfig.h"
+#if CONFIG_DXFT8_PA_TEST
+#include "pa_test.h"
+void app_main(void)
+{
+    pa_test_run();
+}
+#else
+
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -443,3 +452,4 @@ void app_main(void)
     ESP_LOGI(TAG, "ALL ENABLED SELF-TESTS PASS; final RF clock state remains RX");
 #endif
 }
+#endif // !CONFIG_DXFT8_PA_TEST

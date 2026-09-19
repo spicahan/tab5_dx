@@ -7,6 +7,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "esp_log.h"
 
@@ -14,7 +15,7 @@
 #define LOOPBACK_BUFFER_FRAMES  240U
 #define LOOPBACK_READ_TIMEOUT_MS 1000U
 #define LOOPBACK_TABLE_LENGTH   48U
-#define LOOPBACK_TONE_COUNT     2U
+#define LOOPBACK_TONE_COUNT     RF_LOOPBACK_TONE_COUNT
 #define LOOPBACK_FULL_SCALE     8388608.0
 #define LOOPBACK_PI             3.14159265358979323846
 
@@ -46,12 +47,9 @@ static esp_err_t read_frames(pcm1808_i2s_t *adc, uint32_t *buffer,
     const esp_err_t error = pcm1808_i2s_read(adc, buffer, requested, received,
                                              LOOPBACK_READ_TIMEOUT_MS);
     if (error != ESP_OK) {
-        ESP_LOGE(TAG, "loopback I2S read failed: %s", esp_err_to_name(error));
         return error;
     }
     if (*received == 0U || *received > requested) {
-        ESP_LOGE(TAG, "loopback invalid I2S frame count: %u requested, %u received",
-                 (unsigned)requested, (unsigned)*received);
         return ESP_ERR_INVALID_SIZE;
     }
     return ESP_OK;
@@ -89,18 +87,26 @@ static double peak_dbfs(double peak)
     return peak > 0.0 ? 20.0 * log10(peak / LOOPBACK_FULL_SCALE) : -INFINITY;
 }
 
-esp_err_t rf_loopback_measure(pcm1808_i2s_t *adc, const char *label,
-                              uint32_t startup_discard_ms)
+static bool valid_capture_ms(uint32_t capture_ms)
 {
-    if (adc == NULL || label == NULL || label[0] == '\0' ||
-        startup_discard_ms > 5000U) {
+    return capture_ms == 50U || capture_ms == 100U || capture_ms == 200U ||
+           capture_ms == 250U || capture_ms == 1000U;
+}
+
+esp_err_t rf_loopback_capture(pcm1808_i2s_t *adc, uint32_t startup_discard_ms,
+                              uint32_t capture_ms, rf_loopback_result_t *result)
+{
+    if (result == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    memset(result, 0, sizeof(*result));
+    if (adc == NULL || startup_discard_ms > 5000U || !valid_capture_ms(capture_ms)) {
         return ESP_ERR_INVALID_ARG;
     }
     if (adc->rx_channel == NULL || !adc->enabled) {
         return ESP_ERR_INVALID_STATE;
     }
     if (adc->sample_rate_hz != LOOPBACK_SAMPLE_RATE_HZ) {
-        ESP_LOGE(TAG, "loopback measurement requires Fs=48000 Hz");
         return ESP_ERR_INVALID_ARG;
     }
 
@@ -125,9 +131,8 @@ esp_err_t rf_loopback_measure(pcm1808_i2s_t *adc, const char *label,
 
     const size_t discard_frames =
         (size_t)((uint64_t)adc->sample_rate_hz * startup_discard_ms / 1000U);
-    ESP_LOGI(TAG, "RF LOOPBACK begin label=%s discard_ms=%" PRIu32
-                  " capture_ms=1000 Fs=%" PRIu32,
-             label, startup_discard_ms, adc->sample_rate_hz);
+    const size_t capture_frames =
+        (size_t)((uint64_t)adc->sample_rate_hz * capture_ms / 1000U);
 
     esp_err_t error = ESP_OK;
     size_t remaining = discard_frames;
@@ -145,8 +150,8 @@ esp_err_t rf_loopback_measure(pcm1808_i2s_t *adc, const char *label,
     channel_measurement_t channels[PCM1808_I2S_WORDS_PER_FRAME] = {0};
     size_t frames_captured = 0U;
     size_t nonzero_padding_words = 0U;
-    while (frames_captured < adc->sample_rate_hz) {
-        remaining = adc->sample_rate_hz - frames_captured;
+    while (frames_captured < capture_frames) {
+        remaining = capture_frames - frames_captured;
         const size_t requested = remaining < LOOPBACK_BUFFER_FRAMES
                                      ? remaining : LOOPBACK_BUFFER_FRAMES;
         size_t received = 0U;
@@ -171,29 +176,32 @@ esp_err_t rf_loopback_measure(pcm1808_i2s_t *adc, const char *label,
         }
     }
 
-    // Defer reports until all capture reads finish to avoid UART-induced gaps.
-    ESP_LOGI(TAG, "RF LOOPBACK label=%s frames=%u discard_frames=%u padding_nonzero=%u",
-             label, (unsigned)frames_captured, (unsigned)discard_frames,
-             (unsigned)nonzero_padding_words);
+    result->capture_ms = capture_ms;
+    result->frames_captured = frames_captured;
+    result->discard_frames = discard_frames;
+    result->nonzero_padding_words = nonzero_padding_words;
     for (size_t channel = 0U; channel < PCM1808_I2S_WORDS_PER_FRAME; ++channel) {
         const channel_measurement_t *measurement = &channels[channel];
-        const double rms = sqrt(fmax(0.0, measurement->squared_deviations /
-                                          (double)frames_captured));
-        ESP_LOGI(TAG, "RF LOOPBACK %s min=%" PRId32 " max=%" PRId32
-                      " dc=%.3f rms_ac=%.3f rail_hits=%u",
-                 channel == 0U ? "L" : "R", measurement->minimum,
-                 measurement->maximum, measurement->mean, rms,
-                 (unsigned)measurement->rail_hits);
+        result->channels[channel] = (rf_loopback_channel_result_t) {
+            .minimum = measurement->minimum,
+            .maximum = measurement->maximum,
+            .rail_hits = measurement->rail_hits,
+            .dc = measurement->mean,
+            .rms_ac = sqrt(fmax(0.0, measurement->squared_deviations /
+                                     (double)frames_captured)),
+        };
     }
 
     for (size_t tone = 0U; tone < LOOPBACK_TONE_COUNT; ++tone) {
-        double peak[PCM1808_I2S_WORDS_PER_FRAME];
         double phase[PCM1808_I2S_WORDS_PER_FRAME];
+        rf_loopback_tone_result_t *tone_result = &result->tones[tone];
+        tone_result->frequency_hz = (uint32_t)((tone + 1U) * 1000U);
         for (size_t channel = 0U; channel < PCM1808_I2S_WORDS_PER_FRAME; ++channel) {
             const channel_measurement_t *measurement = &channels[channel];
-            peak[channel] = 2.0 * hypot(measurement->cosine_sum[tone],
-                                        measurement->sine_sum[tone]) /
-                            (double)frames_captured;
+            tone_result->peak[channel] =
+                2.0 * hypot(measurement->cosine_sum[tone],
+                             measurement->sine_sum[tone]) / (double)frames_captured;
+            tone_result->dbfs[channel] = peak_dbfs(tone_result->peak[channel]);
             phase[channel] = atan2(-measurement->sine_sum[tone],
                                     measurement->cosine_sum[tone]);
         }
@@ -203,19 +211,82 @@ esp_err_t rf_loopback_measure(pcm1808_i2s_t *adc, const char *label,
         } else if (relative_phase < -180.0) {
             relative_phase += 360.0;
         }
-        ESP_LOGI(TAG, "RF LOOPBACK tone=%u Hz L_peak=%.3f L_dBFS=%.2f"
-                      " R_peak=%.3f R_dBFS=%.2f phase_R-L=%.2f deg",
-                 (unsigned)((tone + 1U) * 1000U), peak[0], peak_dbfs(peak[0]),
-                 peak[1], peak_dbfs(peak[1]), relative_phase);
-    }
-    ESP_LOGI(TAG, "RF LOOPBACK measurement complete; not an analog PASS;"
-                  " tone peak reference=2^23, phase meaningful only above noise");
-    if (nonzero_padding_words > 0U || channels[0].rail_hits > 0U ||
-        channels[1].rail_hits > 0U) {
-        ESP_LOGW(TAG, "loopback sample warning: nonzero padding or rail hits");
+        tone_result->relative_phase_degrees = relative_phase;
     }
 
 cleanup:
     free(buffer);
     return error;
+}
+
+esp_err_t rf_loopback_report(const char *label, const rf_loopback_result_t *result)
+{
+    if (label == NULL || label[0] == '\0' || result == NULL ||
+        !valid_capture_ms(result->capture_ms) ||
+        result->frames_captured != (size_t)result->capture_ms * 48U) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    ESP_LOGI(TAG, "RF LOOPBACK label=%s frames=%u discard_frames=%u padding_nonzero=%u",
+             label, (unsigned)result->frames_captured, (unsigned)result->discard_frames,
+             (unsigned)result->nonzero_padding_words);
+    for (size_t channel = 0U; channel < PCM1808_I2S_WORDS_PER_FRAME; ++channel) {
+        const rf_loopback_channel_result_t *measurement = &result->channels[channel];
+        ESP_LOGI(TAG, "RF LOOPBACK %s min=%" PRId32 " max=%" PRId32
+                      " dc=%.3f rms_ac=%.3f rail_hits=%u",
+                 channel == 0U ? "L" : "R", measurement->minimum,
+                 measurement->maximum, measurement->dc, measurement->rms_ac,
+                 (unsigned)measurement->rail_hits);
+    }
+    for (size_t tone = 0U; tone < LOOPBACK_TONE_COUNT; ++tone) {
+        const rf_loopback_tone_result_t *measurement = &result->tones[tone];
+        ESP_LOGI(TAG, "RF LOOPBACK tone=%u Hz L_peak=%.3f L_dBFS=%.2f"
+                      " R_peak=%.3f R_dBFS=%.2f phase_R-L=%.2f deg",
+                 (unsigned)measurement->frequency_hz,
+                 measurement->peak[0], measurement->dbfs[0],
+                 measurement->peak[1], measurement->dbfs[1],
+                 measurement->relative_phase_degrees);
+    }
+    ESP_LOGI(TAG, "RF LOOPBACK measurement complete; not an analog PASS;"
+                  " tone peak reference=2^23, phase meaningful only above noise");
+    if (result->nonzero_padding_words > 0U || result->channels[0].rail_hits > 0U ||
+        result->channels[1].rail_hits > 0U) {
+        ESP_LOGW(TAG, "loopback sample warning: nonzero padding or rail hits");
+    }
+    return ESP_OK;
+}
+
+esp_err_t rf_loopback_measure_window(pcm1808_i2s_t *adc, const char *label,
+                                     uint32_t startup_discard_ms,
+                                     uint32_t capture_ms)
+{
+    if (adc == NULL || label == NULL || label[0] == '\0' ||
+        startup_discard_ms > 5000U || !valid_capture_ms(capture_ms)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    if (adc->rx_channel == NULL || !adc->enabled) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    if (adc->sample_rate_hz != LOOPBACK_SAMPLE_RATE_HZ) {
+        ESP_LOGE(TAG, "loopback measurement requires Fs=48000 Hz");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    ESP_LOGI(TAG, "RF LOOPBACK begin label=%s discard_ms=%" PRIu32
+                  " capture_ms=%" PRIu32 " Fs=%" PRIu32,
+             label, startup_discard_ms, capture_ms, adc->sample_rate_hz);
+    rf_loopback_result_t result;
+    const esp_err_t error = rf_loopback_capture(adc, startup_discard_ms,
+                                               capture_ms, &result);
+    if (error != ESP_OK) {
+        ESP_LOGE(TAG, "loopback capture failed: %s", esp_err_to_name(error));
+        return error;
+    }
+    return rf_loopback_report(label, &result);
+}
+
+esp_err_t rf_loopback_measure(pcm1808_i2s_t *adc, const char *label,
+                              uint32_t startup_discard_ms)
+{
+    return rf_loopback_measure_window(adc, label, startup_discard_ms, 1000U);
 }
