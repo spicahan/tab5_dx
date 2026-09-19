@@ -9,7 +9,9 @@ This repository keeps the two sides of the bench setup separate:
 
 For the real RF daughter board's BS170s-absent 14.075 MHz scope test, use the
 [separate real-board profile](tab5/README.md#real-rf-board-14075-mhz-clk0-scope-test).
-It enables G48 power, holds G47 in RX, tests the real ADC and programs CLK0.
+It enables G48 power, holds G47 in RX and programs CLK0. The current scope
+profile leaves I2S disabled after a constant-sample failure on the real ADC;
+this is recorded separately and is not counted as an I2S pass.
 
 For the mock I2C + I2S setup, power both boards independently over USB.
 Connect I2C through the Tab5's internal M5-Bus port:

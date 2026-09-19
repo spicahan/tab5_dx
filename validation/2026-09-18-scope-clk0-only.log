@@ -1,0 +1,316 @@
+SCOPE: reset 1/3
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff02c78
+Core1 Saved PC:0x4ff02c78
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x17a4
+load:0x4ff29ed0,len:0xfc0
+load:0x4ff2cbd0,len:0x345c
+entry 0x4ff29eda
+I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+I (28) boot: compile time Sep 18 2026 20:00:12
+I (28) boot: Multicore bootloader
+I (29) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (34) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 80MHz
+I (42) boot.esp32p4: SPI Mode       : QIO
+I (46) boot.esp32p4: SPI Flash Size : 16MB
+I (50) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (57) boot: ## Label            Usage          Type ST Offset   Length
+I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+I (84) boot: End of partition table
+I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0d038h ( 53304) map
+I (101) esp_image: segment 1: paddr=0001d060 vaddr=30100000 size=00044h (    68) load
+I (103) esp_image: segment 2: paddr=0001d0ac vaddr=4ff00000 size=02f6ch ( 12140) load
+I (111) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=2075ch (132956) map
+I (133) esp_image: segment 4: paddr=00040784 vaddr=4ff02f6c size=0c598h ( 50584) load
+I (142) esp_image: segment 5: paddr=0004cd24 vaddr=4ff0f580 size=01fb8h (  8120) load
+I (148) boot: Loaded app from partition at offset 0x10000
+I (149) boot: Disabling RNG early entropy source...
+I (162) cpu_start: Multicore app
+I (173) cpu_start: Pro cpu start user code
+I (173) cpu_start: cpu freq: 360000000 Hz
+I (173) app_init: Application information:
+I (173) app_init: Project name:     tab5_dxft8_bringup
+I (178) app_init: App version:      3aa8557-dirty
+I (182) app_init: Compile time:     Sep 18 2026 20:08:50
+I (187) app_init: ELF file SHA256:  acb04a63a...
+I (191) app_init: ESP-IDF:          v5.5.1
+I (195) efuse_init: Min chip rev:     v0.1
+I (199) efuse_init: Max chip rev:     v1.99 
+I (203) efuse_init: Chip rev:         v1.3
+I (207) heap_init: Initializing. RAM available for dynamic allocation:
+I (213) heap_init: At 4FF12CC0 len 00028300 (160 KiB): RAM
+I (218) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (223) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+I (229) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+I (234) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+I (240) spi_flash: detected chip: generic
+I (243) spi_flash: flash io: qio
+I (246) main_task: Started on CPU0
+I (256) main_task: Calling app_main()
+I (256) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+I (256) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+I (266) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+W (266) tab5_bringup: REAL RF BOARD BENCH MODE: no LPF/TX interlock implemented
+I (576) tab5_bringup: RF board: G48=HIGH (power enabled), G47=HIGH (RX / TX off)
+W (576) tab5_bringup: SCOPE MODE: BS170s must remain absent; CLK0 will stay on after checks
+W (576) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+I (586) tab5_bringup: probe PASS: found Si5351 at 0x60
+I (596) tab5_bringup: status PASS: device=0x11, interrupt=0xF8
+I (606) si5351: 7.074 MHz register vectors match the reviewed design
+I (606) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+I (626) si5351: verified registers 0x03..0x03
+I (626) si5351: verified registers 0x10..0x17
+I (626) si5351: verified registers 0x18..0x19
+I (626) si5351: verified registers 0x0F..0x0F
+I (636) si5351: verified registers 0xB7..0xB7
+I (646) si5351: verified registers 0x1A..0x21
+I (646) si5351: verified registers 0x22..0x29
+I (646) si5351: verified registers 0x2A..0x31
+I (656) si5351: verified registers 0x32..0x39
+I (656) si5351: verified registers 0x10..0x10
+I (656) si5351: verified registers 0x11..0x11
+I (666) si5351: verified PLL reset strobe self-cleared
+I (686) si5351: verified registers 0x03..0x03
+I (686) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (686) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+I (686) tab5_bringup: TX clock self-test disabled; RX clock selected for validation
+I (696) tab5_bringup: SI5351 SELF-TEST PASS
+W (706) tab5_bringup: I2S self-test disabled; only the Si5351 test was run
+I (706) si5351: carrier plan: CLK0=14075000 Hz, PLLA=788200000 Hz, MS0=56, reference=26000000 Hz
+I (726) si5351: verified registers 0x03..0x03
+I (726) si5351: verified registers 0x10..0x17
+I (726) si5351: verified registers 0x18..0x19
+I (726) si5351: verified registers 0x0F..0x0F
+I (736) si5351: verified registers 0xB7..0xB7
+I (736) si5351: verified registers 0x95..0x95
+I (746) si5351: verified registers 0xA5..0xA5
+I (746) si5351: verified registers 0x1A..0x21
+I (756) si5351: verified registers 0x2A..0x31
+I (756) si5351: verified registers 0x10..0x10
+I (756) si5351: verified PLL reset strobe self-cleared
+I (786) si5351: verified registers 0x03..0x03
+I (786) si5351: enabled output mask=0x01 (register 3=0xFE)
+I (786) tab5_bringup: ALL ENABLED SELF-TESTS PASS
+I (786) tab5_bringup: CLK0 SCOPE READY: nominal 14075000 Hz; CLK0 only; G48=HIGH, G47=HIGH; I2S clocks stopped
+W (796) tab5_bringup: Scope CLK0/TP1 to board GND with a high-impedance probe; this carrier restarts on every boot
+I (806) main_task: Returned from app_main()
+SCOPE: run 1 PASS
+SCOPE: reset 2/3
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff02c78
+Core1 Saved PC:0x4ff02c78
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x17a4
+load:0x4ff29ed0,len:0xfc0
+load:0x4ff2cbd0,len:0x345c
+entry 0x4ff29eda
+I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+I (28) boot: compile time Sep 18 2026 20:00:12
+I (28) boot: Multicore bootloader
+I (29) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (34) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 80MHz
+I (42) boot.esp32p4: SPI Mode       : QIO
+I (46) boot.esp32p4: SPI Flash Size : 16MB
+I (50) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (57) boot: ## Label            Usage          Type ST Offset   Length
+I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+I (84) boot: End of partition table
+I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0d038h ( 53304) map
+I (101) esp_image: segment 1: paddr=0001d060 vaddr=30100000 size=00044h (    68) load
+I (103) esp_image: segment 2: paddr=0001d0ac vaddr=4ff00000 size=02f6ch ( 12140) load
+I (111) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=2075ch (132956) map
+I (133) esp_image: segment 4: paddr=00040784 vaddr=4ff02f6c size=0c598h ( 50584) load
+I (142) esp_image: segment 5: paddr=0004cd24 vaddr=4ff0f580 size=01fb8h (  8120) load
+I (148) boot: Loaded app from partition at offset 0x10000
+I (149) boot: Disabling RNG early entropy source...
+I (162) cpu_start: Multicore app
+I (173) cpu_start: Pro cpu start user code
+I (173) cpu_start: cpu freq: 360000000 Hz
+I (173) app_init: Application information:
+I (173) app_init: Project name:     tab5_dxft8_bringup
+I (178) app_init: App version:      3aa8557-dirty
+I (182) app_init: Compile time:     Sep 18 2026 20:08:50
+I (187) app_init: ELF file SHA256:  acb04a63a...
+I (191) app_init: ESP-IDF:          v5.5.1
+I (195) efuse_init: Min chip rev:     v0.1
+I (199) efuse_init: Max chip rev:     v1.99 
+I (203) efuse_init: Chip rev:         v1.3
+I (207) heap_init: Initializing. RAM available for dynamic allocation:
+I (213) heap_init: At 4FF12CC0 len 00028300 (160 KiB): RAM
+I (218) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (223) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+I (229) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+I (234) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+I (240) spi_flash: detected chip: generic
+I (243) spi_flash: flash io: qio
+I (246) main_task: Started on CPU0
+I (256) main_task: Calling app_main()
+I (256) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+I (256) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+I (266) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+W (266) tab5_bringup: REAL RF BOARD BENCH MODE: no LPF/TX interlock implemented
+I (576) tab5_bringup: RF board: G48=HIGH (power enabled), G47=HIGH (RX / TX off)
+W (576) tab5_bringup: SCOPE MODE: BS170s must remain absent; CLK0 will stay on after checks
+W (576) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+I (586) tab5_bringup: probe PASS: found Si5351 at 0x60
+I (596) tab5_bringup: status PASS: device=0x11, interrupt=0xF8
+I (596) si5351: 7.074 MHz register vectors match the reviewed design
+I (606) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+I (626) si5351: verified registers 0x03..0x03
+I (626) si5351: verified registers 0x10..0x17
+I (626) si5351: verified registers 0x18..0x19
+I (626) si5351: verified registers 0x0F..0x0F
+I (636) si5351: verified registers 0xB7..0xB7
+I (646) si5351: verified registers 0x1A..0x21
+I (646) si5351: verified registers 0x22..0x29
+I (646) si5351: verified registers 0x2A..0x31
+I (656) si5351: verified registers 0x32..0x39
+I (656) si5351: verified registers 0x10..0x10
+I (656) si5351: verified registers 0x11..0x11
+I (666) si5351: verified PLL reset strobe self-cleared
+I (686) si5351: verified registers 0x03..0x03
+I (686) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (686) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+I (686) tab5_bringup: TX clock self-test disabled; RX clock selected for validation
+I (696) tab5_bringup: SI5351 SELF-TEST PASS
+W (706) tab5_bringup: I2S self-test disabled; only the Si5351 test was run
+I (706) si5351: carrier plan: CLK0=14075000 Hz, PLLA=788200000 Hz, MS0=56, reference=26000000 Hz
+I (726) si5351: verified registers 0x03..0x03
+I (726) si5351: verified registers 0x10..0x17
+I (726) si5351: verified registers 0x18..0x19
+I (726) si5351: verified registers 0x0F..0x0F
+I (736) si5351: verified registers 0xB7..0xB7
+I (736) si5351: verified registers 0x95..0x95
+I (746) si5351: verified registers 0xA5..0xA5
+I (746) si5351: verified registers 0x1A..0x21
+I (756) si5351: verified registers 0x2A..0x31
+I (756) si5351: verified registers 0x10..0x10
+I (756) si5351: verified PLL reset strobe self-cleared
+I (786) si5351: verified registers 0x03..0x03
+I (786) si5351: enabled output mask=0x01 (register 3=0xFE)
+I (786) tab5_bringup: ALL ENABLED SELF-TESTS PASS
+I (786) tab5_bringup: CLK0 SCOPE READY: nominal 14075000 Hz; CLK0 only; G48=HIGH, G47=HIGH; I2S clocks stopped
+W (796) tab5_bringup: Scope CLK0/TP1 to board GND with a high-impedance probe; this carrier restarts on every boot
+I (806) main_task: Returned from app_main()
+SCOPE: run 2 PASS
+SCOPE: reset 3/3
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff02c78
+Core1 Saved PC:0x4ff02c78
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x17a4
+load:0x4ff29ed0,len:0xfc0
+load:0x4ff2cbd0,len:0x345c
+entry 0x4ff29eda
+I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+I (28) boot: compile time Sep 18 2026 20:00:12
+I (28) boot: Multicore bootloader
+I (29) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (34) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 80MHz
+I (42) boot.esp32p4: SPI Mode       : QIO
+I (46) boot.esp32p4: SPI Flash Size : 16MB
+I (50) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (57) boot: ## Label            Usage          Type ST Offset   Length
+I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+I (84) boot: End of partition table
+I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0d038h ( 53304) map
+I (101) esp_image: segment 1: paddr=0001d060 vaddr=30100000 size=00044h (    68) load
+I (103) esp_image: segment 2: paddr=0001d0ac vaddr=4ff00000 size=02f6ch ( 12140) load
+I (111) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=2075ch (132956) map
+I (133) esp_image: segment 4: paddr=00040784 vaddr=4ff02f6c size=0c598h ( 50584) load
+I (142) esp_image: segment 5: paddr=0004cd24 vaddr=4ff0f580 size=01fb8h (  8120) load
+I (148) boot: Loaded app from partition at offset 0x10000
+I (149) boot: Disabling RNG early entropy source...
+I (162) cpu_start: Multicore app
+I (173) cpu_start: Pro cpu start user code
+I (173) cpu_start: cpu freq: 360000000 Hz
+I (173) app_init: Application information:
+I (173) app_init: Project name:     tab5_dxft8_bringup
+I (178) app_init: App version:      3aa8557-dirty
+I (182) app_init: Compile time:     Sep 18 2026 20:08:50
+I (187) app_init: ELF file SHA256:  acb04a63a...
+I (191) app_init: ESP-IDF:          v5.5.1
+I (195) efuse_init: Min chip rev:     v0.1
+I (199) efuse_init: Max chip rev:     v1.99 
+I (203) efuse_init: Chip rev:         v1.3
+I (207) heap_init: Initializing. RAM available for dynamic allocation:
+I (213) heap_init: At 4FF12CC0 len 00028300 (160 KiB): RAM
+I (218) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (223) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+I (229) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+I (234) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+I (240) spi_flash: detected chip: generic
+I (243) spi_flash: flash io: qio
+I (246) main_task: Started on CPU0
+I (256) main_task: Calling app_main()
+I (256) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+I (256) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+I (266) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+W (266) tab5_bringup: REAL RF BOARD BENCH MODE: no LPF/TX interlock implemented
+I (576) tab5_bringup: RF board: G48=HIGH (power enabled), G47=HIGH (RX / TX off)
+W (576) tab5_bringup: SCOPE MODE: BS170s must remain absent; CLK0 will stay on after checks
+W (576) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+I (586) tab5_bringup: probe PASS: found Si5351 at 0x60
+I (596) tab5_bringup: status PASS: device=0x11, interrupt=0xF8
+I (606) si5351: 7.074 MHz register vectors match the reviewed design
+I (606) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+I (626) si5351: verified registers 0x03..0x03
+I (626) si5351: verified registers 0x10..0x17
+I (626) si5351: verified registers 0x18..0x19
+I (626) si5351: verified registers 0x0F..0x0F
+I (636) si5351: verified registers 0xB7..0xB7
+I (646) si5351: verified registers 0x1A..0x21
+I (646) si5351: verified registers 0x22..0x29
+I (646) si5351: verified registers 0x2A..0x31
+I (656) si5351: verified registers 0x32..0x39
+I (656) si5351: verified registers 0x10..0x10
+I (656) si5351: verified registers 0x11..0x11
+I (666) si5351: verified PLL reset strobe self-cleared
+I (686) si5351: verified registers 0x03..0x03
+I (686) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (686) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+I (686) tab5_bringup: TX clock self-test disabled; RX clock selected for validation
+I (696) tab5_bringup: SI5351 SELF-TEST PASS
+W (706) tab5_bringup: I2S self-test disabled; only the Si5351 test was run
+I (706) si5351: carrier plan: CLK0=14075000 Hz, PLLA=788200000 Hz, MS0=56, reference=26000000 Hz
+I (726) si5351: verified registers 0x03..0x03
+I (726) si5351: verified registers 0x10..0x17
+I (726) si5351: verified registers 0x18..0x19
+I (726) si5351: verified registers 0x0F..0x0F
+I (736) si5351: verified registers 0xB7..0xB7
+I (736) si5351: verified registers 0x95..0x95
+I (746) si5351: verified registers 0xA5..0xA5
+I (746) si5351: verified registers 0x1A..0x21
+I (756) si5351: verified registers 0x2A..0x31
+I (756) si5351: verified registers 0x10..0x10
+I (756) si5351: verified PLL reset strobe self-cleared
+I (786) si5351: verified registers 0x03..0x03
+I (786) si5351: enabled output mask=0x01 (register 3=0xFE)
+I (786) tab5_bringup: ALL ENABLED SELF-TESTS PASS
+I (786) tab5_bringup: CLK0 SCOPE READY: nominal 14075000 Hz; CLK0 only; G48=HIGH, G47=HIGH; I2S clocks stopped
+W (796) tab5_bringup: Scope CLK0/TP1 to board GND with a high-impedance probe; this carrier restarts on every boot
+I (806) main_task: Returned from app_main()
+SCOPE: run 3 PASS
+SCOPE PASS: 3 real-board runs (I2C/CLK0 only; I2S NOT validated); CLK0 left running

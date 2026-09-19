@@ -3,6 +3,7 @@
 CONFIG_DXFT8_REAL_RF_BOARD=y
 CONFIG_DXFT8_SCOPE_CLK0_CARRIER=y
 CONFIG_DXFT8_RUN_TX_PATH_SELF_TEST=n
-CONFIG_DXFT8_RUN_I2S_SELF_TEST=y
-CONFIG_DXFT8_I2S_MOCK_PATTERN_TEST=n
-CONFIG_DXFT8_I2S_CAPTURE_STATS=y
+# CLK0 can be scoped independently of the ADC. The first powered real-board
+# ADC test returned constant -1 samples; do not mistake this for an I2S pass.
+# Enable RUN_I2S_SELF_TEST + CAPTURE_STATS explicitly when investigating it.
+CONFIG_DXFT8_RUN_I2S_SELF_TEST=n

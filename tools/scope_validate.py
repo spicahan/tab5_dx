@@ -19,6 +19,8 @@ def main():
     parser.add_argument("--tab5", required=True)
     parser.add_argument("--runs", type=int, default=3)
     parser.add_argument("--timeout", type=float, default=15)
+    parser.add_argument("--i2c-only", action="store_true",
+                        help="Expect I2S explicitly disabled; this does not validate the ADC")
     args = parser.parse_args()
     if args.runs < 1 or args.timeout <= 0:
         parser.error("runs and timeout must be positive")
@@ -63,18 +65,24 @@ def main():
                     break
             if failed_at is not None:
                 raise RuntimeError(f"firmware failure in run {run}")
-            for marker in (
+            markers = [
                 "SDA=GPIO31, SCL=GPIO32",
                 "G48=HIGH (power enabled), G47=HIGH (RX / TX off)",
                 "SI5351 SELF-TEST PASS",
-                "I2S CAPTURE SANITY PASS: 4800 PCM1808 frames received",
                 "ALL ENABLED SELF-TESTS PASS",
                 "CLK0 SCOPE READY: nominal 14075000 Hz; CLK0 only;",
-            ):
+            ]
+            markers.append(
+                "I2S self-test disabled; only the Si5351 test was run"
+                if args.i2c_only else
+                "I2S CAPTURE SANITY PASS: 4800 PCM1808 frames received"
+            )
+            for marker in markers:
                 if marker not in history:
                     raise RuntimeError(f"run {run} missing evidence: {marker}")
             print(f"SCOPE: run {run} PASS", flush=True)
-        print(f"SCOPE PASS: {args.runs} real-board runs; CLK0 left running", flush=True)
+        coverage = "I2C/CLK0 only; I2S NOT validated" if args.i2c_only else "I2C + I2S + CLK0"
+        print(f"SCOPE PASS: {args.runs} real-board runs ({coverage}); CLK0 left running", flush=True)
         return 0
     except (RuntimeError, serial.SerialException) as error:
         print(f"SCOPE FAIL: {error}", flush=True)

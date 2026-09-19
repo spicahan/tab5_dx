@@ -27,15 +27,23 @@ idf.py -B build-scope -D SDKCONFIG=sdkconfig.scope \
   -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.scope.defaults' build
 idf.py -B build-scope -p /dev/cu.usbmodem101 flash
 cd ..
-python tools/scope_validate.py --tab5 /dev/cu.usbmodem101 --runs 3
+python tools/scope_validate.py --tab5 /dev/cu.usbmodem101 --runs 3 --i2c-only
 ```
 
 The scope build first sets G48 LOW and G47 HIGH, then enables G48 and waits
 200 ms for startup. It runs the existing Si5351 readback/lock checks with the
-7.074 MHz RX clock plan, followed by real PCM1808 sample statistics (12,000
-startup frames discarded, then 4,800 captured). On success it stops I2S clocks,
-disables Si5351 outputs during reprogramming, and leaves **CLK0 only** enabled
+7.074 MHz RX clock plan. The current scope profile explicitly disables I2S:
+the first powered PCM1808 test returned constant -1 on both channels, so ADC
+validation remains unresolved and is not claimed by this test. On success it
+disables Si5351 outputs during reprogramming and leaves **CLK0 only** enabled
 at nominal 14,075,000 Hz. G47 stays HIGH throughout; no TX selection occurs.
+
+To investigate the ADC later, use `idf.py -B build-scope menuconfig` to enable
+`DXFT8_RUN_I2S_SELF_TEST` with `DXFT8_I2S_CAPTURE_STATS`, rebuild/flash, and run
+the runner without `--i2c-only`. That build captures 4,800 frames after 12,000
+startup frames and requires a varying, correctly padded sample stream before
+enabling the carrier. Existing local sdkconfig settings override defaults;
+use menuconfig to disable I2S when switching back to the independent CLK0 test.
 
 The carrier helper uses PLLA = 788.2 MHz and integer MS0 = 56 with a nominal
 26 MHz reference; spread spectrum is off, and register 3 ends at `0xFE`.
