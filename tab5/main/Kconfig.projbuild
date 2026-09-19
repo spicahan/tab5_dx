@@ -1,15 +1,18 @@
 menu "TAB5 DXFT8 bring-up"
 
 config DXFT8_PA_TEST
-    bool "Manual 40 m populated-PA bench console (disarmed boot)"
+    bool "LPF-qualified 40 m PA bench console (manual TX)"
     depends on DXFT8_REAL_RF_BOARD
     default n
     help
         Bypasses all automatic bring-up and leakage-loopback startup.
-        G48 LOW and G47 LOW at boot. USB commands manually arm one bounded
-        100/250 ms burst at 7.075 MHz. Separate optional leakage command
-        enables CLK1 but never switches G47 HIGH. No LPF/load/current sensing:
-        operator must fit a 40 m LPF and rated 50-ohm dummy load, no antenna.
+        Boot powers the RF board for a calibrated GPIO51 LPF inspection,
+        with CLK0 OFF and G47 LOW. Stable 40 m LPF ID auto-arms permission,
+        never transmission. G48 remains HIGH while sensing, including idle.
+        Explicit pa commands request 100/250/10000 ms guarded bursts at
+        7.075 MHz; leak remains 100/250 ms. Bad/stale ADC results cut power.
+        Load/current/temperature are not sensed: fit a rated 50-ohm dummy
+        load, no antenna. LPF resistor ID does not verify RF filter integrity.
         Software cutoff is not a hardware RF interlock or protection guarantee.
 
 config DXFT8_REAL_RF_BOARD

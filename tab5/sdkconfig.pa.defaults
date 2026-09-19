@@ -1,4 +1,4 @@
-# Populated PA: manual one-shot commands only; hardcoded 40 m / 7.075 MHz.
+# Populated PA: powered LPF auto-qualification, MANUAL TX; fixed 40 m / 7.075 MHz.
 CONFIG_DXFT8_REAL_RF_BOARD=y
 CONFIG_DXFT8_PA_TEST=y
 CONFIG_DXFT8_SCOPE_CLK0_CARRIER=n
@@ -7,5 +7,6 @@ CONFIG_DXFT8_RUN_I2S_SELF_TEST=n
 CONFIG_DXFT8_RX_LOOPBACK_BENCH=n
 CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD=y
 CONFIG_GPIO_CTRL_FUNC_IN_IRAM=y
+CONFIG_ESP_TIMER_ISR_AFFINITY_CPU0=y
 # Main console + worker each have independent stacks; no GUI required.
 CONFIG_ESP_MAIN_TASK_STACK_SIZE=6144

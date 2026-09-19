@@ -3,6 +3,8 @@ idf_component_register(
         "app_main.c"
         "pa_test.c"
         "pa_policy.c"
+        "lpf_classify.c"
+        "lpf_sense.c"
         "pcm1808_i2s.c"
         "rf_loopback.c"
         "si5351.c"
@@ -15,4 +17,5 @@ idf_component_register(
         esp_driver_usb_serial_jtag
         esp_timer
         nvs_flash
+        esp_adc
 )

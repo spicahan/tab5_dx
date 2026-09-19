@@ -8,15 +8,17 @@ dependency.
 ## Manual 40 m PA test (populated BS170s)
 
 Use `sdkconfig.pa.defaults` for a board with the BS170s installed. This profile
-bypasses the old automatic bring-up entirely: boot does not enable RF power
-or CLK0. It holds **G48 LOW (power off), G47 LOW (RX disconnected)** while
-disarmed. G47 stays LOW during preparation, the burst, cleanup, and idle; this
-is deliberately not the earlier G47-HIGH receive-loopback test.
+bypasses the old automatic carrier tests. **Boot automatically powers the RF
+board to inspect its LPF ID, but never issues a CLK0/TX-enable command.** A stable,
+calibrated 40 m ID automatically arms command eligibility. G48 remains HIGH
+for continuous sensing during idle and cooldown, with the clocks OFF.
+G47 stays LOW (RX disconnected) during scanning, preparation, every burst,
+cleanup, and idle. This is not the earlier G47-HIGH receive-loopback test.
 
 The band/frequency and wiring are fixed: 40 m, CLK0 at **7.075 MHz**, a 26 MHz
 external Si5351 reference, internal M5-Bus I2C SDA/G31 and SCL/G32 at 100 kHz,
-and G48/G47 power/RX-switch controls. Optional leakage capture uses the same
-I2S pins as the earlier real-board test: MCLK/G16, BCLK/G45, LRCK/G3, DOUT/G4.
+G51/ADC2 channel 2 LPF sense, and G48/G47 power/RX-switch controls. Optional
+leakage capture uses the earlier I2S pins: MCLK/G16, BCLK/G45, LRCK/G3, DOUT/G4.
 Disconnect the mock board; it has the same I2C address. RF power still needs
 the proper battery-positive lead or DC supply: G48 is an enable, not a power
 source. Check polarity, common ground and connector orientation.
@@ -37,39 +39,93 @@ idf.py -B build-pa -p /dev/cu.usbmodem101 monitor
 ```
 
 Existing `sdkconfig.pa` settings override defaults. Confirm the startup log
-identifies `PA TEST READY: DISARMED`, G48/G47 LOW, and the power-off ISR
-self-check passes. That self-check does not exercise or verify the physical
-RF power switch, and disconnected-board boot is not a PA or RF-output test.
+identifies `PA TEST READY: LPF AUTO mode` and the power-off ISR self-check
+passes. The initial scan verifies Si5351 clocks off, then qualifies the LPF.
+That ISR self-check does not verify the physical RF power switch. With the
+board disconnected, the scan cannot contact the Si5351 and can latch a
+persistent fault because the initial output-off state is unverified; this is
+a fail-closed outcome, not a PA test. Follow the fault-recovery procedure below
+after safely reconnecting. The older console validation record describes the
+previous manually armed firmware, not this new auto-sensing behavior.
 
 Power down **all** sources (battery, USB and external supply) before connecting
 the RF board, LPF, dummy load, or test probes. Fit the **40 m LPF** and a
 suitably rated **50-ohm dummy load** at the antenna output; do not attach an
 antenna for this test. Use a current-limited supply where practical and monitor
-current and heating. The firmware does not measure LPF identity, load presence,
-output power, SWR, current or temperature; the arming phrase is only the
-operator's confirmation, not an electrical interlock.
+current and heating. The firmware now measures the LPF's **resistor ID**, but
+does not verify the RF filter response, load presence, output power, SWR,
+current or temperature. Inspect those independently before transmitting.
+Do not hot-plug or swap LPFs while powered, even if transmission is idle.
+
+### LPF identification and automatic arming
+
+The supplied `TAB5 DX RF V1.11 CIRCUIT SCHEMATIC.pdf` specifies a 100 kOhm
+upper sense resistor. With a nominal 3.3 V rail, the 40 m LPF's 47 kOhm ID
+resistor gives about 1.055 V; the 20 m LPF's 100 kOhm ID gives about 1.650 V.
+G51 uses ADC2 channel 2 at 12 dB attenuation with per-channel curve-fitting
+calibration. Calibration initialization must succeed: there is no raw-code
+fallback and no automatic adjustment of thresholds.
+
+| Calibrated G51 reading | Classification | Fixed 40 m TX eligible? |
+| --- | --- | --- |
+| 900–1200 mV | 40 m | Only after stable qualification |
+| 1450–1850 mV | 20 m | No: wrong LPF for 7.075 MHz |
+| At least 2800 mV, without raw ADC saturation | Missing | No |
+| Other voltage, raw rail code, excessive spread, or ADC error | Invalid/error | No |
+
+Each batch discards one conversion and evaluates eight samples individually.
+All eight must be in the same accepted range and the batch spread must be
+at most 80 mV; an in-range average cannot hide an outlier. Arming requires
+at least five consecutive 40 m batches spanning at least 100 ms. Samples
+are normally taken about every 25–35 ms; acquisition must finish within 50 ms.
+The scan includes a 200 ms initial power-settling interval before acceptance.
+After a successful scan, logs show `LPF SCAN COMPLETE`, `PA AUTO ARMED`, and
+`status` reports `ARMED_AUTO` with the measured millivolts.
+
+G48 stays HIGH after qualification because the ID divider needs its supply.
+Monitoring continues through idle, cooldown and transmission. An invalid,
+wrong-band or failed ADC batch requests G48 LOW and inhibits further tests.
+A separate timer on the other CPU checks freshness about every 20 ms and
+requests cutoff if the reading is over 200 ms old. These are software detection
+intervals, not guaranteed RF cessation times. Following any such trip, inspect
+the readings/hardware and explicitly enter `scan`; there is no automatic retry.
+
+The divider has roughly 32 kOhm source resistance for 40 m, or 50 kOhm for
+20 m. Compare the logged voltage with a meter at G51 before relying on the
+classification. A **100 nF capacitor from G51 to ground, close to the ADC input,
+is recommended** for sampling stability; it is not shown on the supplied main
+schematic and must not be assumed present. Allow at least 50 ms input settling
+after a supply change. If readings are biased or noisy, investigate the sense
+connection, filtering, source impedance and calibration; do not widen the
+windows or substitute raw thresholds to force the test to arm. An ID resistor
+can identify a board but cannot prove its RF inductors/capacitors are correct.
 
 ### One manually requested burst
 
-Connect a USB serial console. Enter `status` to verify it is disarmed. Type
-this command and wait for the `PA ARMED` reply:
-
-```text
-arm 40m dummyload
-```
-
-Then enter the burst command **separately**, within 30 seconds:
+Wait for `PA AUTO ARMED` and check `status` while idle. Confirm the 40 m LPF
+and rated 50-ohm dummy load are connected, then explicitly request one burst:
 
 ```text
 pa 100
 ```
 
-Do not paste or queue multiple commands. A complete arming confirmation is
-required again for every attempt, and there is a five-second cooldown after
-each job, including failed preparation. `pa` defaults to `pa 100`; `pa 250`
-permits the longer guarded test after inspecting the first result. No continuous
-TX or automatic repeat is provided. Invalid/rejected commands disarm, and
-`help` or `status` never extends the arming expiry.
+Do not paste or queue commands. `pa` defaults to `pa 100`; `pa 250` permits
+the longer short test after inspecting the first result. A successful burst
+is followed by a five-second cooldown. If sensing remains valid, eligibility
+automatically returns after cooldown, but another explicit command is always
+required: no automatic TX or repeat is provided. There is no longer a separate
+30-second manual arm token. `scan` starts/restarts powered LPF qualification;
+the legacy `arm 40m dummyload` command is only an alias for `scan`, not a way
+to bypass the voltage checks.
+
+Only after the short tests and supply/load/temperature checks are satisfactory,
+`pa 10000` explicitly requests the longer test with a **10-second guard**.
+Normal clock shutdown begins around 9.95 seconds, with I2C/RTOS overhead;
+actual RF pulse width is not measured by this firmware. This command has a
+10-second cooldown, then auto-arm eligibility can return if the LPF remains
+valid. It must never be treated as a repeating carrier mode. The LPF interlock
+does not prevent overheating or excessive current during that longer burst.
+There is no `leak 10000` mode.
 
 For ordinary `pa`, CLK1 is off during the burst. The firmware programs and
 checks the clock plan with CLK0 off, arms an independent timer, then enables
@@ -80,19 +136,22 @@ widths**. The logged command interval is also not an RF-envelope measurement.
 No claim of RF output power, PA efficiency, or hardware protection follows
 from `PA JOB COMPLETE`.
 
-`off` disarms and requests power off. During an active job, any received USB
-input other than CR/LF-only terminators requests immediate power cutoff;
+`off` requests power off and inhibits sensing/automatic arming until `scan`
+or a fault-free reboot. Invalid/rejected commands also inhibit and request
+power off; do not request another burst before cooldown finishes. During an
+active job, any received USB input other than CR/LF-only terminators requests
+immediate power cutoff;
 do not type `status` while a burst/preparation is running. The console also
 recognizes Ctrl-C/Escape, although a terminal program may intercept those keys.
-The independent 100/250 ms burst guard does not depend on receiving keyboard
-input; preparation has its own three-second guard. Closing the monitor is not
-an emergency power disconnect.
+The independent burst guard does not depend on receiving keyboard input;
+initial power-on/LPF scanning has its own three-second guard. Closing the
+monitor is not an emergency power disconnect and does not stop idle sensing.
 
 ### Optional TX-state leakage capture
 
-After a satisfactory ordinary PA check, arm again and separately enter
-`leak 100` (or later `leak 250`). G47 remains LOW. CLK1 runs at 28.296 MHz,
-corresponding to 7.074 MHz receive mixing; CLK0 remains 7.075 MHz, so a coupled
+After a satisfactory ordinary PA check and cooldown, wait for `ARMED_AUTO`
+and enter `leak 100` (or later `leak 250`). G47 remains LOW. CLK1 runs at
+28.296 MHz, corresponding to 7.074 MHz receive mixing; CLK0 remains 7.075 MHz, so a coupled
 response may appear at 1 kHz. This intentionally retains CLK1 during TX only
 for the diagnostic, unlike ordinary `pa`.
 
@@ -114,26 +173,30 @@ amplitude is not a universal board pass/fail threshold.
 
 ### Shutdown and faults
 
-Every completed/failed job requests G48 LOW and keeps G47 LOW. Cleanup stops
-I2S, resets its pins and disables their pulls to reduce back-powering. Normal shutdown
-also verifies Si5351 register 3 is `0xFF` before removing power. Before RF power
-is enabled, a persistent pending marker is saved; it is cleared after cleanup
-only when power was never applied, or a verified clock-off state was not
-followed by an attempted CLK0 enable, or final clock shutdown was verified. No
-flash/NVS writes take place during the keyed window. An uncertain shutdown or
-reset interrupting a job therefore leaves a persistent fault that refuses
-rearming, including after a serial reset or ordinary reboot.
-Failure to contact the Si5351 after applying power also latches a fault,
-because the firmware could not verify its initial output-off state.
+Successful bursts verify Si5351 register 3 is `0xFF`, leave CLK0/CLK1 OFF, and
+keep G48 HIGH for LPF monitoring through cooldown and idle. G47 remains LOW.
+After leakage capture, cleanup stops I2S, resets its pins and disables pulls
+to reduce unnecessary drive/back-powering. An error, LPF trip, stale reading
+or operator `off` requests G48 LOW before potentially blocking cleanup.
+
+A persistent pending marker is stored before initial RF power and before each
+attempted transmission. The scan clears it only after verifying clocks off;
+the burst clears it only after confirmed clock shutdown. No flash/NVS writes
+take place while CLK0 is intentionally enabled. Resetting during an unverified
+scan or burst therefore leaves a persistent fault that refuses scanning and
+arming, including after a serial reset or ordinary reboot. Failure to contact
+the Si5351 after applying power can also latch a fault because the initial
+output-off state could not be verified.
 
 After that fault, disconnect **all hardware power sources**, including RF
 battery/DC and Tab5 USB/battery power, and allow the rails to discharge before
 reconnecting and booting. Disconnect signal/back-power connections as needed
 to make the RF board genuinely unpowered. Diagnose the logged failure first.
-After that full power cycle and safe reassembly, boot disarmed and enter
-`clearfault powercycled` to acknowledge the recovery manually; the firmware
-does not sense that a power cycle occurred. A Tab5 reset or USB reconnection
-alone neither clears the stored fault nor proves the RF board lost power.
+After that full power cycle and safe reassembly, boot with the fault latched
+and enter `clearfault powercycled` to acknowledge recovery manually; the firmware
+does not sense that a power cycle occurred. This command leaves RF power off;
+then enter `scan` separately to resume qualification. A Tab5 reset or USB
+reconnection alone neither clears the stored fault nor proves RF power was lost.
 G48 LOW requests a switch action; it does not prove zero rail voltage or
 immediate RF cessation because of capacitance,
 back-power paths, GPIO reset states or hardware faults. Suitable hardware

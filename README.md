@@ -2,21 +2,32 @@
 
 Working directory: `~/tab5_dx` (renamed from `~/tab5_dxft8`; Git history kept).
 
+Latest: [LPF auto-arm / 10-second PA build and flash record](validation/2026-09-19-pa-lpf-auto.md).
+This image was flashed without starting the application; connected-board ADC
+qualification and the longer RF burst remain to be checked.
+
 For the populated BS170 PA, use the new
 [manual 40 m PA test profile](tab5/README.md#manual-40-m-pa-test-populated-bs170s),
-not the older automatic scope or RX-loopback builds. It boots with G48/G47 LOW
-and stays disarmed until the operator confirms a 40 m LPF and rated 50-ohm
-dummy load, then explicitly requests one short 7.075 MHz burst. G47 never
-switches to RX during this test. An optional `leak` command runs the QSD/ADC
-to observe TX-state leakage; its one-second ADC startup occurs with CLK0 OFF.
-No LPF, load, current or temperature interlock is implemented. These are
-bench-test controls, not a production PA-protection system or measured RF
-performance results. Flash with the RF board disconnected/unpowered, and
-power everything off before reconnecting it. See the linked instructions for
-commands, cooldown, cancellation, and fault recovery.
-The [disconnected-console validation](validation/2026-09-19-pa-console.md)
-records the flashed image and passing startup/command checks; PA output has
-not yet been measured.
+not the older automatic scope or RX-loopback builds. On boot it powers the RF
+board with CLK0 OFF and G47 LOW to inspect the calibrated LPF ID on G51.
+Stable 40 m identification automatically makes an explicit 7.075 MHz burst
+command eligible; it never starts or repeats transmission automatically.
+G48 remains HIGH for idle/cooldown sensing, with the clocks OFF. `pa 100`,
+`pa 250`, and the explicit longer `pa 10000` are bounded single bursts;
+`off` cuts power and inhibits sensing until `scan` or a fault-free reboot.
+An optional short `leak` command observes TX-state leakage with a one-second
+ADC startup while CLK0 is OFF. G47 stays LOW throughout.
+
+The LPF resistor ID interlock does not verify actual RF filtering, dummy-load
+presence, current, SWR or temperature. Fit a 40 m LPF and rated 50-ohm dummy
+load, and do not hot-swap LPFs. These controls are not a hardware PA-protection
+guarantee. Flash with the RF board disconnected/unpowered, then power everything
+off before reconnecting it. See the linked instructions for voltage windows,
+long-burst precautions, cooldown, cancellation, and persistent fault recovery.
+The [earlier disconnected-console validation](validation/2026-09-19-pa-console.md)
+records the original manually armed image, not validation of the new LPF
+auto-arm/long-burst behavior. Preserve that historical record; it does not
+establish PA output performance.
 
 The [BS170-absent RX leakage loopback](tab5/README.md#rx-leakage-loopback-bs170s-absent)
 keeps G47 HIGH/RX selected and compares CLK0 OFF with 1/2 kHz offset carriers

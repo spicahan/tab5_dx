@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""Validate the already-flashed disarmed PA console, not RF/PA performance.
+"""Inspect or turn off the already-flashed LPF-AUTO PA console; never key RF.
 
-Default checks never send an accepted PA/leak burst. --disconnected explicitly
-asserts the RF daughter board is physically disconnected and permits one pa 100
-job, which MUST fail at the missing Si5351 probe before any CLK0 enable attempt.
-That optional negative test intentionally leaves a persistent shutdown fault;
-the script never clears it, including across USB resets.
-Use only after flashing the PA-test image: resetting an older automatic-loopback
-image could enable its outputs. This script cannot detect a physical connection,
-prove a pin voltage, clear a shutdown fault, or certify hardware safety.
+Default --mode off recognizes the LPF-AUTO status reply, requests off, then
+checks the reported DISARMED/G48 LOW/G47 LOW/sensing-off state. --mode status
+sends only status requests. IMPORTANT: firmware treats USB input during a job
+as cancellation, so even status can stop an active scan or burst.
+
+This utility never requests reset, scan, arm, PA/leak transmission or fault
+clearing. Opening a USB port can nevertheless reset some boards/drivers; that
+can trigger the installed firmware's automatic power-on LPF scan. Use only on
+the intended, already-flashed image and with appropriate hardware precautions.
+No pin voltage, RF envelope, dummy load, temperature or PA quality is measured.
+Old --disconnected/--expiry transmit-negative tests are intentionally removed:
+a formerly "unarmed" pa request can now be valid after LPF auto-qualification.
 """
 
 import argparse
@@ -18,19 +22,25 @@ import time
 from pathlib import Path
 
 import serial
-from esptool.reset import HardReset
 
 
 ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
-FATAL = re.compile(r"Guru Meditation|abort\(\)|PA INIT FAILED")
+STATUS = re.compile(
+    r"PA STATUS: (?P<state>ARMED_AUTO|DISARMED); G48=(?P<g48>[01]) G47=(?P<g47>[01]); "
+    r"band=40m source=7075000 Hz; cooldown_ms=(?P<cooldown>\d+); "
+    r"shutdown_fault=(?P<fault>none|LATCHED); sensing=(?P<sensing>on|off); "
+    r"LPF=(?P<lpf>[^\r\n]+?) mV=(?P<mv>-?\d+)(?=\r?\n)"
+)
+CRASH = re.compile(r"Guru Meditation|abort\(\)|PA INIT FAILED")
 
 
 class Validation:
-    def __init__(self, port, output):
+    def __init__(self, port, output, timeout):
         self.port = port
         self.output = output
+        self.timeout = timeout
         self.history = ""
-        self.expect_latched_fault = False
+        self.recognized = False
 
     def log(self, message):
         self.emit(f"\nPA VALIDATE: {message}\n")
@@ -46,145 +56,86 @@ class Validation:
             self.history = ANSI.sub("", self.history + data)
             self.emit(ANSI.sub("", data))
 
-    def check_fatal(self):
-        match = FATAL.search(self.history)
-        if match:
-            raise RuntimeError(f"firmware failure/fault: {match.group(0)}")
-        if not self.expect_latched_fault and re.search(
-                r"shutdown_fault=LATCHED|PA SHUTDOWN FAULT LATCHED", self.history):
-            raise RuntimeError("unexpected shutdown fault; a physical power-cycle/confirmation is required")
-
-    def capture(self, seconds, check=True):
+    def capture(self, seconds):
         deadline = time.monotonic() + seconds
         while time.monotonic() < deadline:
             self.read()
-            if check:
-                self.check_fatal()
 
-    def wait(self, pattern, offset=0, timeout=4):
-        deadline = time.monotonic() + timeout
-        while time.monotonic() < deadline:
-            self.check_fatal()
-            match = re.search(pattern, self.history[offset:])
-            if match:
-                return self.history[offset:]
-            self.read()
-        raise RuntimeError(f"timed out waiting for {pattern!r}")
-
-    def command(self, payload, expected, timeout=4):
-        # Separate intentional commands so the device can reject queued batches.
-        self.capture(0.15)
+    def send(self, command):
+        # Keep the allowlist here, not just in the CLI: no alternate mode may
+        # accidentally restore the old harness's arm/PA/scan/reset behavior.
+        if command not in ("status", "off"):
+            raise ValueError("only status/off are permitted")
         offset = len(self.history)
-        if isinstance(payload, str):
-            payload = payload.encode("ascii") + b"\n"
-        self.log(f"send {payload!r}")
-        self.port.write(payload)
+        self.log(f"send {command}")
+        self.port.write(command.encode("ascii") + b"\n")
         self.port.flush()
-        return self.wait(expected, offset, timeout)
+        return offset
 
-    def status(self, armed=False, fault="none"):
-        state = "ARMED" if armed else "DISARMED"
-        response = self.command("status", rf"PA STATUS: {state};[^\r\n]*shutdown_fault={fault}")
-        match = re.search(rf"PA STATUS: {state}; G48=0 G47=0; band=40m "
-                          rf"source=7075000 Hz; cooldown_ms=(\d+); shutdown_fault={fault}", response)
-        if not match:
-            raise RuntimeError("status did not report the expected safe GPIO/band/fault state")
-        return int(match.group(1))
+    def status(self):
+        # If the first status input cancels a busy job, its response is a
+        # cancellation, not status. Allow bounded status-only retries once the
+        # worker has had a chance to finish its safe cleanup.
+        deadline = time.monotonic() + self.timeout
+        for attempt in range(3):
+            self.capture(0.15)
+            offset = self.send("status")
+            attempt_deadline = min(deadline, time.monotonic() + self.timeout / 3)
+            while time.monotonic() < attempt_deadline:
+                match = STATUS.search(self.history[offset:])
+                if match:
+                    self.recognized = True
+                    return match.groupdict()
+                self.read()
+            if time.monotonic() >= deadline:
+                break
+            self.log(f"status reply not yet available (attempt {attempt + 1}); "
+                     "input may have cancelled an active job")
+        raise RuntimeError("no recognized LPF-AUTO status reply; no power-on or TX commands sent")
 
-    def arm(self):
-        self.command("arm 40m dummyload", r"PA ARMED: one use, expires in 30s; RF remains OFF")
+    def off(self):
+        if not self.recognized:
+            raise RuntimeError("refusing off workflow until LPF-AUTO firmware is recognized")
+        offset = self.send("off")
+        deadline = time.monotonic() + self.timeout
+        while time.monotonic() < deadline:
+            response = self.history[offset:]
+            if (re.search(r"PA POWER OFF: G48=0 G47=0;", response) and
+                    "PA IDLE:" in response):
+                break
+            self.read()
+        else:
+            raise RuntimeError("off requested but POWER OFF/IDLE confirmation was not received")
+        state = self.status()
+        if any(state[key] != expected for key, expected in (
+                ("state", "DISARMED"), ("g48", "0"), ("g47", "0"), ("sensing", "off"))):
+            raise RuntimeError(f"off was not confirmed by final status: {state}")
+        if "PA PREP:" in self.history[offset:]:
+            raise RuntimeError("an unexpected PA job appeared after off was requested")
+        return state
 
-    def reject(self, payload, reason="invalid command"):
-        return self.command(payload, rf"PA REJECTED: {re.escape(reason)}")
 
-    def assert_no_jobs(self):
-        if re.search(r"PA PREP:|PA JOB |key_attempted=yes", self.history):
-            raise RuntimeError("a hardware job appeared during disarmed-only validation")
-
-
-def validate(check, disconnected, expiry):
-    check.log("resetting expected PA-test firmware; no RF performance test is authorized")
-    HardReset(check.port, uses_usb=True)()
-    check.wait(r"PA TEST READY: DISARMED; G48=LOW G47=LOW; fixed 40m; no boot TX", timeout=12)
-    if "PA GUARD SELF-CHECK PASS: ISR fired with RF power held off" not in check.history:
-        raise RuntimeError("missing independent cutoff self-check evidence")
-    check.status()
-    check.assert_no_jobs()
-
-    for command in ("pa", "leak"):
-        check.reject(command, "not armed")
-    check.reject("arm 20m dummyload")
-    check.reject("clearfault rebooted")
-
-    check.arm()
-    check.status(armed=True)
-    check.command("off", r"PA OFF: disarmed")
-    check.status()
-
-    check.arm()
-    check.reject("pa 1000")
-    check.reject("pa", "not armed")
-    check.arm()
-    check.reject(b"arm 40m dummyload\x00\n")
-    check.reject("pa", "not armed")
-    check.arm()
-    check.reject(b"x" * 80 + b"\n")
-    check.reject("pa", "not armed")
-    # Use only non-keying commands for the queued-batch check. In particular,
-    # never send an arm-then-pa sequence on a potentially connected board: USB
-    # fragmentation could make those look like separately entered commands.
-    check.reject(b"arm 40m dummyload\nstatus\n")
-    check.reject("pa", "not armed")
-
-    if expiry:
-        check.arm()
-        check.log("waiting 31 seconds for the arm token to expire; RF remains off")
-        check.capture(31)
-        check.reject("pa", "arm expired")
-
-    check.status()
-    check.assert_no_jobs()
-    if disconnected:
-        check.log("EXPLICIT DISCONNECTED CHECK: accepting one pa 100; missing Si5351 must stop it")
-        check.arm()
-        check.capture(1.1)
-        start = len(check.history)
-        check.expect_latched_fault = True
-        check.command("pa 100", r"PA DISARMED: job ended; 5000 ms cooldown; fresh arm required", timeout=8)
-        job = check.history[start:]
-        required = (
-            r"PA PREP: 40m CLK0=7075000 Hz; G47=LOW; mode=pa; limit=100 ms",
-            r"PA SAFE OFF: G48=0 G47=0; key_attempted=no;",
-            r"PA JOB FAILED at Si5351 probe:",
-            r"PA SHUTDOWN FAULT LATCHED:",
-        )
-        for marker in required:
-            if not re.search(marker, job):
-                raise RuntimeError(f"missing disconnected-job evidence: {marker}")
-        if "PA JOB COMPLETE" in job or "key_attempted=yes" in job:
-            raise RuntimeError("unexpected clock-enable attempt; RF board may not be disconnected")
-        check.reject("arm 40m dummyload", "cooldown active")
-        if check.status(fault="LATCHED") == 0:
-            raise RuntimeError("expected nonzero cooldown immediately after disconnected job")
-        check.capture(5.1)
-        if check.status(fault="LATCHED") != 0:
-            raise RuntimeError("cooldown did not expire")
-        check.reject("arm 40m dummyload", "shutdown fault latched")
-
-    check.command("off", r"PA OFF: disarmed")
-    check.status(fault="LATCHED" if disconnected else "none")
+def inspect(check, mode):
+    check.log("no explicit reset; allowed commands are status/off only; opening USB can still reset hardware")
+    check.capture(0.5)
+    initial = check.status()
+    check.log(f"recognized LPF-AUTO: {initial['state']}; G48={initial['g48']}; "
+              f"LPF={initial['lpf']} {initial['mv']} mV; fault={initial['fault']}")
+    final = check.off() if mode == "off" else initial
     check.capture(0.2)
-    expected_jobs = 1 if disconnected else 0
-    if check.history.count("PA PREP:") != expected_jobs:
-        raise RuntimeError("unexpected number of accepted hardware jobs")
-    if "PA JOB COMPLETE" in check.history or "key_attempted=yes" in check.history:
-        raise RuntimeError("unexpected successful/keyed hardware job")
-    check.log("PASS: console/policy evidence only; left DISARMED, G48/G47 reported LOW; "
-              f"shutdown_fault={'LATCHED' if disconnected else 'none'}; "
-              f"accepted jobs={expected_jobs}; RF/PA output NOT tested")
-    if disconnected:
-        check.log("Persistent shutdown fault intentionally left latched; no automatic fault clear. "
-                  "Follow full RF-board power-cycle/confirmation procedure before subsequent arming.")
+    if CRASH.search(check.history):
+        raise RuntimeError("firmware initialization/crash evidence in transcript; inspect logs")
+    if mode == "off":
+        check.log("OFF VERIFIED BY FIRMWARE: DISARMED; G48/G47 reported LOW; sensing off. "
+                  "This is not a measurement of zero RF or rail voltage.")
+    else:
+        check.log("STATUS CAPTURED ONLY: no scan/arm/key/off/reset requested. "
+                  "Status input may have cancelled a job under firmware policy.")
+    check.log(f"shutdown_fault={final['fault']}; cooldown_ms={final['cooldown']}; "
+              "RF/PA performance NOT tested; no fault cleared")
+    if final["fault"] == "LATCHED":
+        check.log("Fault remains latched: follow the documented full hardware power-cycle "
+                  "and explicit confirmation procedure; USB reset alone is insufficient.")
 
 
 def main():
@@ -192,38 +143,33 @@ def main():
     parser.add_argument("--tab5", required=True, help="Tab5 USB serial device")
     parser.add_argument("--output", required=True, type=Path,
                         help="New transcript file; refuses to overwrite an existing file")
-    parser.add_argument("--disconnected", action="store_true",
-                        help="Assert RF board is physically disconnected; permit one missing-board pa 100 job, "
-                             "leaving a persistent shutdown fault latched")
-    parser.add_argument("--expiry", action="store_true", help="Also wait 31 seconds to verify arm expiry")
+    parser.add_argument("--mode", choices=("off", "status"), default="off",
+                        help="off (default) verifies disarmed power-off; status only reports state")
+    parser.add_argument("--timeout", type=float, default=9,
+                        help="Maximum seconds per status/off phase (2..30, default 9)")
     args = parser.parse_args()
+    if not 2 <= args.timeout <= 30:
+        parser.error("timeout must be between 2 and 30 seconds")
     port = serial.Serial(port=None, baudrate=115200, timeout=0.1)
+    # Avoid requesting an intentional reset. Some OS/bridge combinations may
+    # still glitch these signals on open; the tool cannot guarantee otherwise.
     port.dtr = False
     port.rts = False
     port.port = args.tab5
-    check = None
     try:
         with args.output.open("x", encoding="utf-8") as output:
-            check = Validation(port, output)
+            check = Validation(port, output, args.timeout)
             try:
                 port.open()
-                # Opening a USB bridge may reset it. Drain that boot before the
-                # explicit reset whose complete safety markers are checked.
-                settle_until = time.monotonic() + 3
-                while time.monotonic() < settle_until:
-                    port.read(port.in_waiting or 1)
-                port.reset_input_buffer()
-                validate(check, args.disconnected, args.expiry)
+                inspect(check, args.mode)
                 return 0
             except (RuntimeError, serial.SerialException, OSError, KeyboardInterrupt) as error:
                 check.log(f"FAIL: {error}")
-                # Never send console commands to an unrecognized firmware image.
-                if port.is_open and "PA TEST READY: DISARMED;" in check.history:
+                if args.mode == "off" and check.recognized and port.is_open:
                     try:
-                        check.log("requesting cancellation/off after failure; inspect cleanup evidence")
-                        port.write(b"\x03off\n")
-                        port.flush()
-                        check.capture(2, check=False)
+                        check.log("requesting off again after failure; final state is not verified")
+                        check.send("off")
+                        check.capture(1)
                     except (serial.SerialException, OSError):
                         pass
                 return 1
