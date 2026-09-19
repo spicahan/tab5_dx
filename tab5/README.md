@@ -10,8 +10,10 @@ dependency.
 Use `sdkconfig.pa.defaults` for a board with the BS170s installed. This profile
 bypasses the old automatic carrier tests. **Boot automatically powers the RF
 board to inspect its LPF ID, but never issues a CLK0/TX-enable command.** A stable,
-calibrated 40 m ID automatically arms command eligibility. G48 remains HIGH
-for continuous sensing during idle and cooldown, with the clocks OFF.
+calibrated 40 m ID automatically arms command eligibility. That result is
+latched between checks; every `pa`/`leak` command requires a new stable LPF
+check with CLK0 OFF before keying. G48 remains HIGH during idle and cooldown,
+with the clocks OFF, but LPF ADC sampling is disabled then and during TX.
 G47 stays LOW (RX disconnected) during scanning, preparation, every burst,
 cleanup, and idle. This is not the earlier G47-HIGH receive-loopback test.
 
@@ -39,14 +41,16 @@ idf.py -B build-pa -p /dev/cu.usbmodem101 monitor
 ```
 
 Existing `sdkconfig.pa` settings override defaults. Confirm the startup log
-identifies `PA TEST READY: LPF AUTO mode` and the power-off ISR self-check
+identifies `PA TEST READY: LPF PRECHECK mode` and the power-off ISR self-check
 passes. The initial scan verifies Si5351 clocks off, then qualifies the LPF.
 That ISR self-check does not verify the physical RF power switch. With the
 board disconnected, the scan cannot contact the Si5351 and can latch a
 persistent fault because the initial output-off state is unverified; this is
 a fail-closed outcome, not a PA test. Follow the fault-recovery procedure below
 after safely reconnecting. The older console validation record describes the
-previous manually armed firmware, not this new auto-sensing behavior.
+previous manually armed firmware, not this precheck-only behavior. The earlier
+LPF auto-arm validation record describes the superseded continuous-monitoring
+image and also does not validate this revision.
 
 Power down **all** sources (battery, USB and external supply) before connecting
 the RF board, LPF, dummy load, or test probes. Fit the **40 m LPF** and a
@@ -57,7 +61,7 @@ does not verify the RF filter response, load presence, output power, SWR,
 current or temperature. Inspect those independently before transmitting.
 Do not hot-plug or swap LPFs while powered, even if transmission is idle.
 
-### LPF identification and automatic arming
+### LPF prechecks and automatic arming
 
 The supplied `TAB5 DX RF V1.11 CIRCUIT SCHEMATIC.pdf` specifies a 100 kOhm
 upper sense resistor. With a nominal 3.3 V rail, the 40 m LPF's 47 kOhm ID
@@ -76,19 +80,34 @@ fallback and no automatic adjustment of thresholds.
 Each batch discards one conversion and evaluates eight samples individually.
 All eight must be in the same accepted range and the batch spread must be
 at most 80 mV; an in-range average cannot hide an outlier. Arming requires
-at least five consecutive 40 m batches spanning at least 100 ms. Samples
-are normally taken about every 25–35 ms; acquisition must finish within 50 ms.
+at least five consecutive 40 m batches spanning at least 100 ms. During each
+bounded qualification, samples are normally taken about every 25–35 ms;
+acquisition must finish within 50 ms.
 The scan includes a 200 ms initial power-settling interval before acceptance.
 After a successful scan, logs show `LPF SCAN COMPLETE`, `PA AUTO ARMED`, and
 `status` reports `ARMED_AUTO` with the measured millivolts.
 
-G48 stays HIGH after qualification because the ID divider needs its supply.
-Monitoring continues through idle, cooldown and transmission. An invalid,
-wrong-band or failed ADC batch requests G48 LOW and inhibits further tests.
-A separate timer on the other CPU checks freshness about every 20 ms and
-requests cutoff if the reading is over 200 ms old. These are software detection
-intervals, not guaranteed RF cessation times. Following any such trip, inspect
-the readings/hardware and explicitly enter `scan`; there is no automatic retry.
+G48 stays HIGH after qualification, but the accepted result is latched and LPF
+ADC sampling stops. `status` shows the last check, not a live voltage reading.
+Before every `pa` or `leak` burst, the firmware performs another bounded stable
+qualification with CLK0 OFF; `LPF PREKEY` reports that result. A missing,
+wrong-band, invalid or failed reading at these checks prevents keying and
+requests G48 LOW. Inspect the readings/hardware and explicitly enter `scan`
+after a failed check; there is no automatic retry.
+
+**There is no LPF monitoring during idle, cooldown or transmission, and no
+LPF-invalid/stale runtime cutoff.** A removal or change after the prekey check
+will not abort the burst. The LPF must remain installed and must not be
+hot-swapped. The independent three-second preparation guard, bounded burst
+timer, operator cancellation and clock/fault shutdown checks remain active;
+they do not detect a changed LPF or load.
+
+This precheck-only behavior follows a hardware test in which PA keying
+disturbed the band ADC reading enough to trip the continuous monitor, despite
+stable pre-TX readings. The user reported that adding 100 nF under the LPF
+socket did not resolve it. Disabling in-burst sensing avoids that particular
+false-trip path; it does not establish that the underlying interference is
+fixed or that the PA is electrically sound.
 
 The divider has roughly 32 kOhm source resistance for 40 m, or 50 kOhm for
 20 m. Compare the logged voltage with a meter at G51 before relying on the
@@ -111,9 +130,9 @@ pa 100
 
 Do not paste or queue commands. `pa` defaults to `pa 100`; `pa 250` permits
 the longer short test after inspecting the first result. A successful burst
-is followed by a five-second cooldown. If sensing remains valid, eligibility
-automatically returns after cooldown, but another explicit command is always
-required: no automatic TX or repeat is provided. There is no longer a separate
+is followed by a five-second cooldown. Latched eligibility automatically
+returns after cooldown, but another explicit command and a fresh prekey check
+are always required: no automatic TX or repeat is provided. There is no longer a separate
 30-second manual arm token. `scan` starts/restarts powered LPF qualification;
 the legacy `arm 40m dummyload` command is only an alias for `scan`, not a way
 to bypass the voltage checks.
@@ -122,9 +141,10 @@ Only after the short tests and supply/load/temperature checks are satisfactory,
 `pa 10000` explicitly requests the longer test with a **10-second guard**.
 Normal clock shutdown begins around 9.95 seconds, with I2C/RTOS overhead;
 actual RF pulse width is not measured by this firmware. This command has a
-10-second cooldown, then auto-arm eligibility can return if the LPF remains
-valid. It must never be treated as a repeating carrier mode. The LPF interlock
-does not prevent overheating or excessive current during that longer burst.
+10-second cooldown, then latched auto-arm eligibility can return; the next
+command still requires a fresh prekey check. It must never be treated as a
+repeating carrier mode. The LPF precheck does not prevent overheating or
+excessive current, and does not monitor the LPF during that longer burst.
 There is no `leak 10000` mode.
 
 For ordinary `pa`, CLK1 is off during the burst. The firmware programs and
@@ -136,7 +156,7 @@ widths**. The logged command interval is also not an RF-envelope measurement.
 No claim of RF output power, PA efficiency, or hardware protection follows
 from `PA JOB COMPLETE`.
 
-`off` requests power off and inhibits sensing/automatic arming until `scan`
+`off` requests power off and inhibits automatic arming until `scan`
 or a fault-free reboot. Invalid/rejected commands also inhibit and request
 power off; do not request another burst before cooldown finishes. During an
 active job, any received USB input other than CR/LF-only terminators requests
@@ -144,8 +164,9 @@ immediate power cutoff;
 do not type `status` while a burst/preparation is running. The console also
 recognizes Ctrl-C/Escape, although a terminal program may intercept those keys.
 The independent burst guard does not depend on receiving keyboard input;
-initial power-on/LPF scanning has its own three-second guard. Closing the
-monitor is not an emergency power disconnect and does not stop idle sensing.
+initial power-on/LPF scanning and burst preparation have a three-second guard.
+Closing the monitor is not an emergency power disconnect and does not power
+down the idle RF board.
 
 ### Optional TX-state leakage capture
 
@@ -174,10 +195,11 @@ amplitude is not a universal board pass/fail threshold.
 ### Shutdown and faults
 
 Successful bursts verify Si5351 register 3 is `0xFF`, leave CLK0/CLK1 OFF, and
-keep G48 HIGH for LPF monitoring through cooldown and idle. G47 remains LOW.
+keep G48 HIGH through cooldown and idle, without LPF ADC sampling. G47 remains LOW.
 After leakage capture, cleanup stops I2S, resets its pins and disables pulls
-to reduce unnecessary drive/back-powering. An error, LPF trip, stale reading
-or operator `off` requests G48 LOW before potentially blocking cleanup.
+to reduce unnecessary drive/back-powering. An error, failed LPF precheck,
+guard expiry or operator `off` requests G48 LOW before potentially blocking
+cleanup. There is no LPF-triggered cutoff after a successful prekey check.
 
 A persistent pending marker is stored before initial RF power and before each
 attempted transmission. The scan clears it only after verifying clocks off;

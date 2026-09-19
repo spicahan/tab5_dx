@@ -38,7 +38,6 @@ bool pa_policy_is_armed(const pa_policy_t *policy, uint64_t now_ms)
            !policy->burst_in_progress &&
            now_ms >= policy->lpf_sample_ms &&
            (!policy->time_seen || now_ms >= policy->last_now_ms) &&
-           now_ms - policy->lpf_sample_ms < PA_POLICY_LPF_FRESH_MS &&
            pa_policy_cooldown_remaining(policy, now_ms) == 0U;
 }
 
@@ -76,8 +75,9 @@ bool pa_policy_set_lpf(pa_policy_t *policy, bool qualified_40m,
     policy->time_seen = true;
     policy->lpf_sample_seen = true;
     policy->lpf_sample_ms = sample_ms;
-    policy->qualified_40m = qualified_40m &&
-                            now_ms - sample_ms < PA_POLICY_LPF_FRESH_MS;
+    // Readiness is latched between explicit acquisitions. The hardware layer
+    // checks sample freshness while qualifying a scan or the next pre-key check.
+    policy->qualified_40m = qualified_40m;
     return true;
 }
 
@@ -223,7 +223,7 @@ const char *pa_policy_rejection_name(pa_rejection_t rejection)
     case PA_REJECT_BUSY: return "burst already in progress";
     case PA_REJECT_CLOCK: return "monotonic clock moved backwards (inhibited)";
     case PA_REJECT_FAULT: return "shutdown fault latched";
-    case PA_REJECT_LPF: return "40m LPF not qualified or stale";
+    case PA_REJECT_LPF: return "40m LPF not qualified";
     default: return "unknown rejection";
     }
 }

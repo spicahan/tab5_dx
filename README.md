@@ -2,9 +2,14 @@
 
 Working directory: `~/tab5_dx` (renamed from `~/tab5_dxft8`; Git history kept).
 
-Latest: [LPF auto-arm / 10-second PA build and flash record](validation/2026-09-19-pa-lpf-auto.md).
-This image was flashed without starting the application; connected-board ADC
-qualification and the longer RF burst remain to be checked.
+Latest: [LPF precheck-only build and test record](validation/2026-09-19-pa-lpf-precheck.md)
+(built, not yet flashed).
+
+The current PA profile uses LPF checks at boot/`scan` and before every burst,
+not continuous LPF monitoring. The earlier
+[LPF auto-arm / 10-second PA build and flash record](validation/2026-09-19-pa-lpf-auto.md)
+describes the previous continuously monitored image; it does not validate this
+precheck-only revision.
 
 For the populated BS170 PA, use the new
 [manual 40 m PA test profile](tab5/README.md#manual-40-m-pa-test-populated-bs170s),
@@ -12,15 +17,21 @@ not the older automatic scope or RX-loopback builds. On boot it powers the RF
 board with CLK0 OFF and G47 LOW to inspect the calibrated LPF ID on G51.
 Stable 40 m identification automatically makes an explicit 7.075 MHz burst
 command eligible; it never starts or repeats transmission automatically.
-G48 remains HIGH for idle/cooldown sensing, with the clocks OFF. `pa 100`,
+Successful qualification is latched between checks. G48 remains HIGH through
+idle/cooldown with the clocks OFF, but band ADC sampling is disabled there
+and during TX. Every `pa`/`leak` command must pass a new stable calibrated
+40 m check with CLK0 OFF before it can key. `pa 100`,
 `pa 250`, and the explicit longer `pa 10000` are bounded single bursts;
-`off` cuts power and inhibits sensing until `scan` or a fault-free reboot.
+`off` cuts power and inhibits eligibility until `scan` or a fault-free reboot.
 An optional short `leak` command observes TX-state leakage with a one-second
 ADC startup while CLK0 is OFF. G47 stays LOW throughout.
 
-The LPF resistor ID interlock does not verify actual RF filtering, dummy-load
+The LPF resistor ID precheck does not verify actual RF filtering, dummy-load
 presence, current, SWR or temperature. Fit a 40 m LPF and rated 50-ohm dummy
-load, and do not hot-swap LPFs. These controls are not a hardware PA-protection
+load, and do not hot-swap LPFs. Removal or a change after the prekey check is
+not detected during TX; there is no LPF-invalid/stale runtime cutoff.
+The independent burst timer, operator cutoff and clock/fault checks remain.
+These controls are not a hardware PA-protection
 guarantee. Flash with the RF board disconnected/unpowered, then power everything
 off before reconnecting it. See the linked instructions for voltage windows,
 long-burst precautions, cooldown, cancellation, and persistent fault recovery.

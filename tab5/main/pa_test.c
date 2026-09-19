@@ -32,7 +32,7 @@
 #error "PA bench requires ISR timers and IRAM GPIO control"
 #endif
 #if !CONFIG_ESP_TIMER_ISR_AFFINITY_CPU0 || CONFIG_FREERTOS_UNICORE
-#error "PA ADC monitor requires CPU1, with cutoff timer ISR on CPU0"
+#error "PA ADC sampler requires CPU1, with cutoff timer ISR on CPU0"
 #endif
 
 #define PA_POWER_GPIO GPIO_NUM_48
@@ -41,16 +41,15 @@
 #define PA_SWITCH_BLANK_MS 35U
 #define LPF_STABLE_US 100000LL
 #define LPF_FRESH_US ((int64_t)PA_POLICY_LPF_FRESH_MS * 1000LL)
-#define LPF_WATCH_PERIOD_US 20000ULL
 
 static const char *TAG = "pa_test";
 static portMUX_TYPE guard_mux = portMUX_INITIALIZER_UNLOCKED;
-static esp_timer_handle_t prep_guard, burst_guard, lpf_guard;
+static esp_timer_handle_t prep_guard, burst_guard;
 static QueueHandle_t jobs;
 static nvs_handle_t safety_store;
 static lpf_sense_t sense;
 
-typedef enum { STOP_NONE, STOP_TIMER, STOP_LPF, STOP_STALE, STOP_OPERATOR } stop_t;
+typedef enum { STOP_NONE = 0, STOP_TIMER = 1, STOP_OPERATOR = 4 } stop_t;
 typedef struct {
     lpf_sense_result_t reading;
     int64_t sample_us;
@@ -62,7 +61,7 @@ typedef struct {
 static band_snapshot_t band;
 static uint32_t sense_epoch;
 static bool sampling;
-static bool band_watch;
+static bool sense_busy;
 static bool rf_ready;
 static stop_t stopped;
 static bool shutdown_fault;
@@ -85,7 +84,6 @@ static void IRAM_ATTR trip_locked(stop_t reason)
     gpio_set_level(PA_POWER_GPIO, 0);
     gpio_set_level(PA_RXSW_GPIO, 0);
     if (stopped == STOP_NONE) { stopped = reason; }
-    band_watch = false;
     sampling = false;
     rf_ready = false;
     band.qualified = false;
@@ -97,20 +95,6 @@ static void IRAM_ATTR cutoff_isr(void *argument)
     (void)argument;
     portENTER_CRITICAL_ISR(&guard_mux);
     trip_locked(STOP_TIMER);
-    portEXIT_CRITICAL_ISR(&guard_mux);
-}
-
-static void IRAM_ATTR lpf_watch_isr(void *argument)
-{
-    (void)argument;
-    portENTER_CRITICAL_ISR(&guard_mux);
-    const int64_t current = esp_timer_get_time();
-    if (band_watch) {
-        if (!band.qualified) { trip_locked(STOP_LPF); }
-        else if (current < band.sample_us || current - band.sample_us > LPF_FRESH_US) {
-            trip_locked(STOP_STALE);
-        }
-    }
     portEXIT_CRITICAL_ISR(&guard_mux);
 }
 
@@ -135,7 +119,6 @@ static void power_off(void)
     gpio_set_level(PA_POWER_GPIO, 0);
     gpio_set_level(PA_RXSW_GPIO, 0);
     sampling = false;
-    band_watch = false;
     rf_ready = false;
     band.qualified = false;
     ++sense_epoch;
@@ -166,11 +149,22 @@ static esp_err_t store_marker(bool pending)
     return error;
 }
 
-static bool lpf_permits_key(void)
+// A latched scan admits preparation, not direct TX. Every burst must acquire
+// a NEW stable LPF result, stop the sampler, and check freshness before keying.
+static bool session_permits_operation(void)
+{
+    portENTER_CRITICAL(&guard_mux);
+    const bool result = rf_ready && !sampling && !sense_busy &&
+        stopped == STOP_NONE && !shutdown_fault && band.qualified;
+    portEXIT_CRITICAL(&guard_mux);
+    return result;
+}
+
+static bool lpf_prekey_is_fresh(void)
 {
     portENTER_CRITICAL(&guard_mux);
     const int64_t current = esp_timer_get_time();
-    const bool result = rf_ready && sampling && band_watch &&
+    const bool result = rf_ready && !sampling && !sense_busy &&
         stopped == STOP_NONE && !shutdown_fault && band.qualified &&
         current >= band.sample_us && current - band.sample_us < LPF_FRESH_US;
     portEXIT_CRITICAL(&guard_mux);
@@ -190,14 +184,16 @@ static void log_band(const char *label)
 }
 
 // IDF oneshot conversion waits inside a critical section. Keep that on CPU1,
-// away from the CPU0 timer ISR; the ISR independently detects stale samples.
-static void lpf_monitor(void *argument)
+// away from the CPU0 cutoff ISR. Sampling runs ONLY during bounded scan/pre-key
+// requests. No ADC sampling or LPF invalid/stale cutoff runs during TX or idle.
+static void lpf_sampler(void *argument)
 {
     (void)argument;
     for (;;) {
         portENTER_CRITICAL(&guard_mux);
         const bool enabled = sampling;
         const uint32_t epoch = sense_epoch;
+        if (enabled) { sense_busy = true; }
         portEXIT_CRITICAL(&guard_mux);
         if (enabled) {
             lpf_sense_result_t reading = {0};
@@ -225,12 +221,62 @@ static void lpf_monitor(void *argument)
                     band.qualified = false;
                     if (error != ESP_OK) { band.reading.classification = LPF_CLASS_ADC_ERROR; }
                 }
-                if (band_watch && !band.qualified) { trip_locked(STOP_LPF); }
             }
+            sense_busy = false;
             portEXIT_CRITICAL(&guard_mux);
         }
         vTaskDelay(pdMS_TO_TICKS(25) + 1);
     }
+}
+
+// Caller keeps the preparation cutoff armed and CLK0 verified OFF. Freeze the
+// accepted result only between batches, so no in-flight ADC conversion can
+// continue into TX. A stuck/slow ADC cannot qualify and the CPU0 guard remains.
+static esp_err_t qualify_lpf(const char *label)
+{
+    if (!clocks_off_known || !power_started || has_fault() || interrupted()) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    portENTER_CRITICAL(&guard_mux);
+    if (stopped != STOP_NONE || shutdown_fault) {
+        portEXIT_CRITICAL(&guard_mux);
+        return ESP_ERR_INVALID_STATE;
+    }
+    rf_ready = false;
+    const int64_t previous_sample_us = band.sample_us;
+    memset(&band, 0, sizeof(band));
+    band.sample_us = previous_sample_us;
+    ++sense_epoch;
+    sampling = true;
+    portEXIT_CRITICAL(&guard_mux);
+
+    bool accepted = false;
+    const int64_t until = esp_timer_get_time() + 600000LL;
+    while (!interrupted() && esp_timer_get_time() < until) {
+        portENTER_CRITICAL(&guard_mux);
+        const int64_t current = esp_timer_get_time();
+        accepted = !sense_busy && band.qualified && current >= band.sample_us &&
+            current - band.sample_us < LPF_FRESH_US &&
+            stopped == STOP_NONE && !shutdown_fault;
+        if (accepted) {
+            sampling = false;
+            ++sense_epoch;
+            rf_ready = true;
+        }
+        portEXIT_CRITICAL(&guard_mux);
+        if (accepted) { break; }
+        vTaskDelay(1);
+    }
+    if (!accepted) {
+        portENTER_CRITICAL(&guard_mux);
+        sampling = false;
+        ++sense_epoch;
+        rf_ready = false;
+        band.qualified = false;
+        portEXIT_CRITICAL(&guard_mux);
+    }
+    log_band(label);
+    return accepted ? ESP_OK : ESP_ERR_INVALID_RESPONSE;
 }
 
 static esp_err_t disable_clocks_checked(void)
@@ -294,13 +340,6 @@ static esp_err_t start_session(void)
     if (stopped == STOP_NONE) {
         error = gpio_set_level(PA_POWER_GPIO, 1);
         power_started = error == ESP_OK;
-        // Keep timestamps monotonic across scan epochs. Qualification resets,
-        // but publishing a synthetic timestamp zero would inhibit the policy.
-        const int64_t previous_sample_us = band.sample_us;
-        memset(&band, 0, sizeof(band));
-        band.sample_us = previous_sample_us;
-        ++sense_epoch;
-        sampling = power_started;
     } else { error = ESP_ERR_TIMEOUT; }
     portEXIT_CRITICAL(&guard_mux);
     if (error != ESP_OK) { return error; }
@@ -325,27 +364,14 @@ static esp_err_t start_session(void)
     error = si5351_write_register(&clock_device, 24U, 0U);
     if (error == ESP_OK) { error = si5351_write_register(&clock_device, 25U, 0U); }
     if (error != ESP_OK || interrupted()) { return error == ESP_OK ? ESP_ERR_TIMEOUT : error; }
-    const int64_t until = esp_timer_get_time() + 600000LL;
-    bool accepted = false;
-    while (!interrupted() && esp_timer_get_time() < until) {
-        portENTER_CRITICAL(&guard_mux);
-        const int64_t current = esp_timer_get_time();
-        accepted = band.qualified && current >= band.sample_us &&
-            current - band.sample_us < LPF_FRESH_US && stopped == STOP_NONE;
-        if (accepted) { band_watch = true; rf_ready = true; }
-        portEXIT_CRITICAL(&guard_mux);
-        if (accepted) { break; }
-        vTaskDelay(1);
-    }
-    log_band("SCAN");
-    if (!accepted) { return ESP_ERR_INVALID_RESPONSE; }
-    // Freshness ISR now overlaps the preparation guard. Never disable freshness
-    // for flash operations; a slow NVS operation is allowed to fail closed.
     error = store_marker(false);
+    if (error != ESP_OK || interrupted()) { return error == ESP_OK ? ESP_ERR_TIMEOUT : error; }
+    error = qualify_lpf("SCAN");
+    if (error != ESP_OK) { return error; }
     (void)esp_timer_stop(prep_guard);
-    if (error != ESP_OK || !lpf_permits_key()) { return error == ESP_OK ? ESP_ERR_TIMEOUT : error; }
-    ESP_LOGI(TAG, "LPF SCAN COMPLETE: 40m qualified; G48=HIGH for sensing; "
-                 "CLK0=OFF; auto-arm eligible, never auto-TX");
+    if (!session_permits_operation()) { return ESP_ERR_TIMEOUT; }
+    ESP_LOGI(TAG, "LPF SCAN COMPLETE: 40m result latched; G48=HIGH; CLK0=OFF; "
+                 "sampler stopped; auto-arm eligible, never auto-TX");
     return ESP_OK;
 }
 
@@ -361,7 +387,7 @@ static void float_i2s_pins(void)
 static esp_err_t perform_burst(const pa_decision_t *job)
 {
     esp_err_t error = ESP_OK;
-    const char *stage = "fresh LPF precheck";
+    const char *stage = "latched LPF/session check";
     pcm1808_i2s_t adc = {0};
     rf_loopback_result_t baseline = {0}, keyed = {0};
     bool baseline_valid = false, keyed_valid = false, key_attempted = false;
@@ -369,19 +395,21 @@ static esp_err_t perform_burst(const pa_decision_t *job)
     const bool leakage = job->action == PA_ACTION_LEAK;
 
     ESP_LOGW(TAG, "PA PREP: 40m CLK0=7075000 Hz; G47=LOW; mode=%s; limit=%" PRIu32
-                  " ms; LPF sensed, dummy load/current/temperature NOT sensed",
+                  " ms; LPF checked before TX only; dummy load/current/temperature NOT sensed",
              leakage ? "leak" : "pa", job->duration_ms);
-    if (!lpf_permits_key()) { error = ESP_ERR_INVALID_STATE; goto cleanup; }
-    log_band("PREKEY");
+    if (!session_permits_operation()) { error = ESP_ERR_INVALID_STATE; goto cleanup; }
+    stage = "preparation guard";
+    error = esp_timer_start_once(prep_guard, PA_PREP_LIMIT_US);
+    if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
     stage = "clock plan";
     // The helper leaves CLK0 OFF throughout and enables CLK1 only at the end.
     all_clocks_off_verified = false;
     error = si5351_configure_rx_loopback(&clock_device, PA_POLICY_RX_HZ,
                                         PA_POLICY_SOURCE_HZ, true);
-    if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+    if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
     if (!leakage) {
         error = disable_clocks_checked();
-        if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+        if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
     } else {
         stage = "I2S startup/baseline";
         const pcm1808_i2s_config_t config = {
@@ -389,11 +417,11 @@ static esp_err_t perform_burst(const pa_decision_t *job)
             .lrck_gpio = GPIO_NUM_3, .din_gpio = GPIO_NUM_4, .sample_rate_hz = 48000U,
         };
         error = pcm1808_i2s_init(&adc, &config);
-        if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+        if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
         error = pcm1808_i2s_enable(&adc);
-        if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+        if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
         error = rf_loopback_capture(&adc, 1000U, 100U, &baseline);
-        if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+        if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
         baseline_valid = true;
         if (baseline.nonzero_padding_words != 0U ||
             baseline.channels[0].rail_hits != 0U || baseline.channels[1].rail_hits != 0U) {
@@ -402,25 +430,38 @@ static esp_err_t perform_burst(const pa_decision_t *job)
     }
     stage = "persistent key marker";
     error = store_marker(true); // Flash writes finish before CLK0 is enabled.
-    if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+    if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
+    // Every accepted PA/leak command gets new ADC evidence AFTER slow clock,
+    // I2S and NVS preparation. qualify_lpf stops sampling before it returns.
+    stage = "fresh LPF precheck";
+    error = qualify_lpf("PREKEY");
+    if (error != ESP_OK || !lpf_prekey_is_fresh()) {
+        if (error == ESP_OK) { error = ESP_ERR_TIMEOUT; }
+        goto cleanup;
+    }
     stage = "burst guard";
     error = esp_timer_start_once(burst_guard, (uint64_t)job->duration_ms * 1000ULL);
-    if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+    if (error != ESP_OK || !lpf_prekey_is_fresh()) {
+        if (error == ESP_OK) { error = ESP_ERR_TIMEOUT; }
+        goto cleanup;
+    }
+    // Overlap guards; no unguarded gap between preparation and RF exposure.
+    (void)esp_timer_stop(prep_guard);
     stage = "CLK0 enable";
     key_started_us = esp_timer_get_time();
     // Last permission check is under the cutoff lock, with the guard armed.
     // I2C itself cannot be in that lock. A concurrent trip cuts G48 and cannot
     // be undone by any later write in this function (it never raises G48).
-    if (!lpf_permits_key()) { error = ESP_ERR_INVALID_STATE; goto cleanup; }
+    if (!lpf_prekey_is_fresh()) { error = ESP_ERR_INVALID_STATE; goto cleanup; }
     key_attempted = true;
     clocks_off_known = false;
     all_clocks_off_verified = false;
     const uint8_t enabled = SI5351_OUTPUT_CLK0 | (leakage ? SI5351_OUTPUT_CLK1 : 0U);
     error = si5351_write_register(&clock_device, 3U, (uint8_t)~enabled);
-    if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+    if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
     uint8_t mask = 0U;
     error = si5351_read_register(&clock_device, 3U, &mask);
-    if (error != ESP_OK || mask != (uint8_t)~enabled || !lpf_permits_key()) {
+    if (error != ESP_OK || mask != (uint8_t)~enabled || !session_permits_operation()) {
         if (error == ESP_OK) { error = ESP_ERR_INVALID_RESPONSE; }
         goto cleanup;
     }
@@ -428,20 +469,20 @@ static esp_err_t perform_burst(const pa_decision_t *job)
     if (leakage) {
         const uint32_t capture_ms = job->duration_ms == 100U ? 50U : 200U;
         error = rf_loopback_capture(&adc, PA_SWITCH_BLANK_MS, capture_ms, &keyed);
-        if (error != ESP_OK || !lpf_permits_key()) { goto cleanup; }
+        if (error != ESP_OK || !session_permits_operation()) { goto cleanup; }
         keyed_valid = true;
     } else {
         const int64_t margin_ms = job->duration_ms == 10000U ? 50LL : 20LL;
         const int64_t finish = key_started_us + ((int64_t)job->duration_ms - margin_ms) * 1000LL;
-        while (lpf_permits_key() && esp_timer_get_time() < finish) { vTaskDelay(1); }
-        if (!lpf_permits_key()) { error = ESP_ERR_TIMEOUT; goto cleanup; }
+        while (session_permits_operation() && esp_timer_get_time() < finish) { vTaskDelay(1); }
+        if (!session_permits_operation()) { error = ESP_ERR_TIMEOUT; goto cleanup; }
     }
     stage = "CLK0 disable";
     error = disable_clocks_checked();
     key_finished_us = esp_timer_get_time();
 
 cleanup:
-    if (error == ESP_OK && (!lpf_permits_key() || !clocks_off_known)) {
+    if (error == ESP_OK && (!session_permits_operation() || !clocks_off_known)) {
         error = ESP_ERR_TIMEOUT;
     }
     if (error != ESP_OK) {
@@ -449,8 +490,9 @@ cleanup:
         close_session();
     } else {
         (void)esp_timer_stop(burst_guard);
+        (void)esp_timer_stop(prep_guard);
         error = store_marker(false); // Outputs already confirmed OFF.
-        if (error != ESP_OK || !lpf_permits_key()) {
+        if (error != ESP_OK || !session_permits_operation()) {
             if (error == ESP_OK) { error = ESP_ERR_TIMEOUT; }
             close_session();
         }
@@ -464,10 +506,10 @@ cleanup:
         }
     }
     ESP_LOGI(TAG, "PA RF OFF: G48=%d G47=%d; key_attempted=%s; "
-                  "clock_mask_off_verified=%s; sensing=%s",
+                  "clock_mask_off_verified=%s; LPF_check=%s; runtime_monitor=off",
              gpio_get_level(PA_POWER_GPIO), gpio_get_level(PA_RXSW_GPIO),
              key_attempted ? "yes" : "no", all_clocks_off_verified ? "yes" : "no",
-             lpf_permits_key() ? "active" : "off");
+             session_permits_operation() ? "latched" : "invalidated");
     if (error != ESP_OK) {
         ESP_LOGE(TAG, "PA JOB FAILED at %s: %s; power off; use scan after diagnosis",
                  stage, esp_err_to_name(error));
@@ -548,9 +590,11 @@ static void help(void)
                  "leak [100|250] | clearfault powercycled");
     ESP_LOGW(TAG, "FIXED 40m 7075000 Hz. Auto-arm requires calibrated stable 40m LPF ID. "
                  "Fit rated 50-ohm dummy load; no antenna. Load/current/temperature NOT sensed.");
-    ESP_LOGI(TAG, "Powered sensing keeps G48 HIGH with CLK0 OFF. off inhibits until scan/reboot. "
+    ESP_LOGI(TAG, "LPF checked at scan and before each burst; no idle/TX monitoring. "
+                 "G48 stays HIGH with CLK0 OFF when idle. off inhibits until scan/reboot. "
                  "5s cooldown, 10s after pa 10000. No automatic TX/repeat; no 10s leak mode.");
-    ESP_LOGW(TAG, "LPF resistor ID is not RF filter/load verification; do not hot-swap LPFs.");
+    ESP_LOGW(TAG, "LPF removal during TX is NOT detected. Power down before changing LPFs. "
+                 "Resistor ID is not RF filter/load verification.");
 }
 
 static void status(const pa_policy_t *policy)
@@ -561,7 +605,8 @@ static void status(const pa_policy_t *policy)
     const bool fault = shutdown_fault;
     portEXIT_CRITICAL(&guard_mux);
     ESP_LOGI(TAG, "PA STATUS: %s; G48=%d G47=%d; band=40m source=7075000 Hz; "
-                 "cooldown_ms=%" PRIu32 "; shutdown_fault=%s; sensing=%s; LPF=%s mV=%d",
+                 "cooldown_ms=%" PRIu32 "; shutdown_fault=%s; sampling=%s; "
+                 "LPF_last=%s mV=%d; runtime_monitor=off",
              pa_policy_is_armed(policy, now_ms()) ? "ARMED_AUTO" : "DISARMED",
              gpio_get_level(PA_POWER_GPIO), gpio_get_level(PA_RXSW_GPIO),
              pa_policy_cooldown_remaining(policy, now_ms()), fault ? "LATCHED" : "none",
@@ -603,10 +648,6 @@ void pa_test_run(void)
     };
     error = esp_timer_create(&timer, &prep_guard);
     if (error == ESP_OK) { error = esp_timer_create(&timer, &burst_guard); }
-    const esp_timer_create_args_t watcher = {
-        .callback = lpf_watch_isr, .dispatch_method = ESP_TIMER_ISR, .name = "lpf_watch",
-    };
-    if (error == ESP_OK) { error = esp_timer_create(&watcher, &lpf_guard); }
     if (error != ESP_OK) { fatal_idle("cutoff timers", error); }
     error = esp_timer_start_once(burst_guard, 10000U);
     if (error != ESP_OK) { fatal_idle("cutoff self-check", error); }
@@ -619,15 +660,13 @@ void pa_test_run(void)
     ESP_LOGI(TAG, "PA GUARD SELF-CHECK PASS: ISR fired with RF power held off");
     error = lpf_sense_init(&sense);
     if (error != ESP_OK) { fatal_idle("GPIO51 calibrated LPF ADC", error); }
-    error = esp_timer_start_periodic(lpf_guard, LPF_WATCH_PERIOD_US);
-    if (error != ESP_OK) { fatal_idle("LPF freshness timer", error); }
     usb_serial_jtag_driver_config_t usb = {.rx_buffer_size = 256U, .tx_buffer_size = 1024U};
     error = usb_serial_jtag_driver_install(&usb);
     if (error != ESP_OK) { fatal_idle("USB console", error); }
     usb_serial_jtag_vfs_use_driver();
     jobs = xQueueCreate(1, sizeof(pa_decision_t));
     if (jobs == NULL ||
-        xTaskCreatePinnedToCore(lpf_monitor, "lpf_adc", 4096, NULL, 5, NULL, 1) != pdPASS ||
+        xTaskCreatePinnedToCore(lpf_sampler, "lpf_adc", 4096, NULL, 5, NULL, 1) != pdPASS ||
         xTaskCreatePinnedToCore(pa_worker, "pa_worker", 8192, NULL, 5, NULL, 0) != pdPASS) {
         fatal_idle("workers", ESP_ERR_NO_MEM);
     }
@@ -638,7 +677,7 @@ void pa_test_run(void)
     char line[PA_POLICY_MAX_LINE + 1U];
     size_t used = 0;
     (void)discard_usb();
-    ESP_LOGI(TAG, "PA TEST READY: LPF AUTO mode; boot starts CLK0 OFF, G47 LOW; no boot TX");
+    ESP_LOGI(TAG, "PA TEST READY: LPF PRECHECK mode; boot starts CLK0 OFF, G47 LOW; no boot TX");
     help();
     status(&policy);
     // A missing/failed scan powers off and does NOT retry automatically.
@@ -652,7 +691,7 @@ void pa_test_run(void)
         const bool done = worker_done, succeeded = worker_success;
         const bool was_burst = worker_was_burst, idle_trip = idle_stopped;
         const bool fault = shutdown_fault;
-        const bool ready = rf_ready && band.qualified && sampling && stopped == STOP_NONE;
+        const bool ready = rf_ready && band.qualified && !sampling && !sense_busy && stopped == STOP_NONE;
         const int64_t sample_us = band.sample_us;
         if (done) { worker_done = false; }
         if (idle_trip) { idle_stopped = false; }
@@ -675,14 +714,14 @@ void pa_test_run(void)
             // finishing cleanup. Do not let that old notification inhibit the
             // new scan; its own result/cancellation controls new permission.
             if (!busy && !done) { pa_policy_inhibit(&policy); }
-            ESP_LOGW(TAG, "LPF monitoring stopped RF power; inspect readings and use scan; no auto-retry");
+            ESP_LOGW(TAG, "RF power stopped; use scan after inspection; no auto-retry");
         }
         (void)pa_policy_set_lpf(&policy, ready, sample_us > 0 ? (uint64_t)sample_us / 1000U : 0U,
                                current_ms);
         const bool armed = !busy && pa_policy_is_armed(&policy, current_ms);
         if (armed && !was_armed) {
-            ESP_LOGI(TAG, "PA AUTO ARMED: stable 40m LPF; CLK0 OFF; awaiting pa/leak command; "
-                         "dummy load is NOT sensed");
+            ESP_LOGI(TAG, "PA AUTO ARMED: latched 40m LPF check; CLK0 OFF; "
+                         "fresh precheck required for each pa/leak command; dummy load NOT sensed");
             log_band("READY");
         }
         was_armed = armed;
@@ -703,7 +742,7 @@ void pa_test_run(void)
             const uint8_t byte = input[index];
             if (byte == 3U || byte == 27U) {
                 cancel_power(); pa_policy_inhibit(&policy); used = 0; bad_line = false;
-                ESP_LOGI(TAG, "PA OFF: keyboard cancellation; sensing inhibited until scan/reboot");
+                ESP_LOGI(TAG, "PA OFF: keyboard cancellation; inhibited until scan/reboot");
                 break;
             }
             if (byte != '\r' && byte != '\n') {
@@ -748,7 +787,7 @@ void pa_test_run(void)
                 break;
             default:
                 cancel_power();
-                ESP_LOGW(TAG, "PA REJECTED: %s; sensing inhibited; use scan to resume",
+                ESP_LOGW(TAG, "PA REJECTED: %s; inhibited; use scan to resume",
                          pa_policy_rejection_name(decision.rejection));
                 break;
             }

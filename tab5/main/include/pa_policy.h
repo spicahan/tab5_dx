@@ -11,6 +11,7 @@ extern "C" {
 
 #define PA_POLICY_RX_HZ UINT32_C(7074000)
 #define PA_POLICY_SOURCE_HZ UINT32_C(7075000)
+// Maximum sample age during hardware acquisition, not an idle readiness TTL.
 #define PA_POLICY_LPF_FRESH_MS UINT32_C(200)
 #define PA_POLICY_COOLDOWN_MS UINT32_C(5000)
 #define PA_POLICY_LONG_COOLDOWN_MS UINT32_C(10000)
@@ -66,10 +67,14 @@ typedef struct {
  * PA_POLICY_MAX_LINE characters, excluding NUL. The caller must provide a
  * NUL-terminated buffer and reject embedded NULs/overlong input at ingress.
  *
- * Automatic arming means fresh (<200 ms), externally qualified 40m LPF evidence,
- * no shutdown fault, no inhibit, no active burst and no cooldown. It never
- * returns a TX action. The hardware layer owns stable ADC classification,
- * continuous monitoring, immediate pre-key verification and physical abort.
+ * Automatic arming means latched, externally qualified 40m LPF evidence, no
+ * shutdown fault, no inhibit, no active burst and no cooldown. It never returns
+ * a TX action. Idle time does not expire qualification. The hardware layer owns
+ * stable ADC classification and sample freshness during boot/scan and a fresh
+ * pre-key verification. It does not monitor LPF readings during a burst; the
+ * LPF must not be changed while powered. Hardware errors must invalidate the
+ * latched readiness, and independent burst cutoff/physical abort remain its
+ * responsibility.
  * `scan` clears inhibit and old LPF evidence, requesting fresh qualification;
  * the deprecated exact `arm 40m dummyload` text is a SCAN alias, never bypass.
  * SCAN is allowed during cooldown but cannot arm until cooldown has finished.
@@ -93,9 +98,11 @@ typedef struct {
  */
 void pa_policy_init(pa_policy_t *policy);
 /* qualified_40m must already include the hardware classifier's stable-window
- * checks; false represents wrong/missing/ambiguous/error LPF. Returns false for
- * NULL, future/out-of-order timestamps or backwards now (and inhibits). Valid
- * bad/stale samples disqualify without removing or adding a manual inhibit.
+ * and acquisition-time freshness checks; false invalidates the latch for a
+ * wrong/missing/ambiguous/error LPF or inactive hardware session. An unchanged
+ * qualified snapshot may be republished with its original timestamp indefinitely.
+ * Returns false for NULL, future/out-of-order timestamps or backwards now (and
+ * inhibits). A valid false update disqualifies without changing manual inhibit.
  * These APIs are not thread-safe: serialize updates with submit/complete.
  */
 bool pa_policy_set_lpf(pa_policy_t *policy, bool qualified_40m,

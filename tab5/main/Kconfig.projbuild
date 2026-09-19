@@ -8,9 +8,13 @@ config DXFT8_PA_TEST
         Bypasses all automatic bring-up and leakage-loopback startup.
         Boot powers the RF board for a calibrated GPIO51 LPF inspection,
         with CLK0 OFF and G47 LOW. Stable 40 m LPF ID auto-arms permission,
-        never transmission. G48 remains HIGH while sensing, including idle.
+        never transmission. Each pa/leak command requires a fresh stable
+        check with CLK0 OFF. Results are latched between checks; no LPF ADC
+        sampling occurs during idle or TX. G48 remains HIGH in idle.
         Explicit pa commands request 100/250/10000 ms guarded bursts at
-        7.075 MHz; leak remains 100/250 ms. Bad/stale ADC results cut power.
+        7.075 MHz; leak remains 100/250 ms. A failed LPF check prevents TX;
+        no LPF-invalid/stale runtime cutoff exists. Do not hot-swap LPFs.
+        Preparation/burst timers, operator cutoff and fault checks remain.
         Load/current/temperature are not sensed: fit a rated 50-ohm dummy
         load, no antenna. LPF resistor ID does not verify RF filter integrity.
         Software cutoff is not a hardware RF interlock or protection guarantee.

@@ -47,8 +47,14 @@ int main(void)
     expect(&state, " \t\r\nhelp\r\n", 4U, PA_ACTION_HELP, PA_REJECT_NONE, 0U);
     expect(&state, "status", 4U, PA_ACTION_STATUS, PA_REJECT_NONE, 0U);
     assert(pa_policy_is_armed(&state, 202U));
-    assert(!pa_policy_is_armed(&state, 203U)); // Exact 200 ms freshness boundary.
-    expect(&state, "leak", 203U, PA_ACTION_REJECTED, PA_REJECT_LPF, 0U);
+    assert(pa_policy_is_armed(&state, 203U)); // No idle 200 ms expiry.
+    assert(pa_policy_is_armed(&state, 10003U));
+    assert(pa_policy_set_lpf(&state, true, 3U, 60003U)); // Same latched snapshot.
+    assert(pa_policy_is_armed(&state, 60003U) && !state.burst_in_progress);
+    expect(&state, "status", 60004U, PA_ACTION_STATUS, PA_REJECT_NONE, 0U);
+    expect(&state, "help", 60005U, PA_ACTION_HELP, PA_REJECT_NONE, 0U);
+    assert(pa_policy_is_armed(&state, 60005U) && !state.burst_in_progress);
+    expect(&state, "leak", 60006U, PA_ACTION_LEAK, PA_REJECT_NONE, 100U);
 
     fresh(&state, 100U);
     assert(pa_policy_set_lpf(&state, false, 101U, 101U)); // Wrong/missing/ambiguous/error.
@@ -56,7 +62,7 @@ int main(void)
     qualify(&state, 102U);
     assert(pa_policy_is_armed(&state, 102U) && !state.burst_in_progress);
     assert(pa_policy_set_lpf(&state, true, 102U, 302U)); // Old but correctly ordered snapshot.
-    assert(!pa_policy_is_armed(&state, 302U));
+    assert(pa_policy_is_armed(&state, 302U));
     qualify(&state, 303U);
     expect(&state, "off", 304U, PA_ACTION_OFF, PA_REJECT_NONE, 0U);
     for (uint64_t now = 305U; now < 1000U; ++now) {
@@ -96,7 +102,7 @@ int main(void)
         fresh(&state, 0U);
         expect(&state, valid[i], 1U, i < 4U ? PA_ACTION_PA : PA_ACTION_LEAK, PA_REJECT_NONE, durations[i]);
         assert(state.burst_in_progress && !pa_policy_is_armed(&state, 1U));
-        qualify(&state, 2U);
+        assert(pa_policy_set_lpf(&state, true, 0U, 2U));
         assert(!pa_policy_is_armed(&state, 2U));
         const uint64_t completed = durations[i] + 2U;
         pa_policy_complete(&state, completed);
@@ -105,11 +111,37 @@ int main(void)
         assert(pa_policy_cooldown_remaining(&state, completed) == cooldown);
         pa_policy_complete(&state, completed + 1U);
         assert(state.completed_at_ms == completed); // Repeated idle cleanup preserves cooldown.
-        qualify(&state, completed + cooldown - 1U);
+        // No new ADC evidence during the burst or cooldown. Qualification stays
+        // latched, but neither completion nor cooldown expiration starts TX.
         assert(!pa_policy_is_armed(&state, completed + cooldown - 1U));
         assert(pa_policy_cooldown_remaining(&state, completed + cooldown - 1U) == 1U);
         assert(pa_policy_is_armed(&state, completed + cooldown) && !state.burst_in_progress);
+        assert(state.lpf_sample_ms == 0U);
+        assert(pa_policy_set_lpf(&state, true, 0U, completed + cooldown + 10000U));
+        assert(pa_policy_is_armed(&state, completed + cooldown + 10000U));
+        expect(&state, valid[i], completed + cooldown + 10001U,
+               i < 4U ? PA_ACTION_PA : PA_ACTION_LEAK, PA_REJECT_NONE, durations[i]);
+        assert(state.burst_in_progress); // Only this new command starts another job.
     }
+
+    // Invalidating an old latch immediately blocks TX; recovery requires scan
+    // after the resulting rejection, not just republishing the old good state.
+    fresh(&state, 10U);
+    assert(pa_policy_set_lpf(&state, false, 10U, 20010U));
+    assert(!state.qualified_40m && !pa_policy_is_armed(&state, 20010U));
+    expect(&state, "pa 10000", 20011U, PA_ACTION_REJECTED, PA_REJECT_LPF, 0U);
+    assert(pa_policy_set_lpf(&state, true, 10U, 20012U));
+    assert(state.inhibited && !pa_policy_is_armed(&state, 20012U));
+    scan(&state, 20013U);
+    assert(!state.qualified_40m);
+    qualify(&state, 20014U);
+    assert(pa_policy_is_armed(&state, 40014U));
+
+    // Explicit scan drops an otherwise valid latched result before reacquiring.
+    scan(&state, 40015U);
+    assert(!pa_policy_is_armed(&state, 40016U));
+    qualify(&state, 40017U);
+    assert(pa_policy_is_armed(&state, 60017U));
 
     fresh(&state, 0U);
     expect(&state, " \tpa 10000\r\n", 1U, PA_ACTION_PA, PA_REJECT_NONE, 10000U);
@@ -155,6 +187,12 @@ int main(void)
     expect(&state, overlong, 1U, PA_ACTION_REJECTED, PA_REJECT_INVALID, 0U);
 
     fresh(&state, 100U);
+    assert(pa_policy_set_lpf(&state, true, 100U, 10100U));
+    assert(!pa_policy_is_armed(&state, 10099U)); // Latching does not relax clock checks.
+    expect(&state, "status", 10099U, PA_ACTION_REJECTED, PA_REJECT_CLOCK, 0U);
+    assert(state.inhibited && !state.qualified_40m);
+
+    fresh(&state, 100U);
     assert(!pa_policy_set_lpf(&state, true, 99U, 101U)); // Reordered sample.
     assert(state.inhibited && !pa_policy_is_armed(&state, 101U));
     scan(&state, 102U);
@@ -185,7 +223,7 @@ int main(void)
     pa_policy_complete(NULL, 0U);
     assert(!pa_policy_set_lpf(NULL, true, 0U, 0U));
     assert(!pa_policy_is_armed(NULL, 0U) && pa_policy_cooldown_remaining(NULL, 0U) == 0U);
-    assert(strcmp(pa_policy_rejection_name(PA_REJECT_LPF), "40m LPF not qualified or stale") == 0);
-    puts("PA policy tests passed: fresh-LPF auto-arm without auto-TX, sticky inhibit, fault gating, scan/legacy alias, bounded durations, cooldown, timestamp/invalid input handling.");
+    assert(strcmp(pa_policy_rejection_name(PA_REJECT_LPF), "40m LPF not qualified") == 0);
+    puts("PA policy tests passed: latched-LPF auto-arm without auto-TX, idle/cooldown retention, explicit invalidation/recovery, sticky inhibit, fault gating, scan/legacy alias, bounded durations, timestamp/invalid input handling.");
     return 0;
 }

@@ -1,4 +1,5 @@
-# Populated PA: powered LPF auto-qualification, MANUAL TX; fixed 40 m / 7.075 MHz.
+# Populated PA: LPF scan/prekey checks only, MANUAL TX; fixed 40 m / 7.075 MHz.
+# No LPF monitoring in idle/TX; never hot-swap the LPF.
 CONFIG_DXFT8_REAL_RF_BOARD=y
 CONFIG_DXFT8_PA_TEST=y
 CONFIG_DXFT8_SCOPE_CLK0_CARRIER=n
