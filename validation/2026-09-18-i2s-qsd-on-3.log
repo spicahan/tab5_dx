@@ -1,0 +1,119 @@
+I2S DIAGNOSTIC: resetting Tab5; sample-quality warnings are expected
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff02e9a
+Core1 Saved PC:0x4ff02e9a
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x17a4
+load:0x4ff29ed0,len:0xfc0
+load:0x4ff2cbd0,len:0x345c
+entry 0x4ff29eda
+I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+I (28) boot: compile time Sep 18 2026 20:41:24
+I (28) boot: Multicore bootloader
+I (29) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (34) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 80MHz
+I (42) boot.esp32p4: SPI Mode       : QIO
+I (46) boot.esp32p4: SPI Flash Size : 16MB
+I (50) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (57) boot: ## Label            Usage          Type ST Offset   Length
+I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+I (84) boot: End of partition table
+I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0ece8h ( 60648) map
+I (102) esp_image: segment 1: paddr=0001ed10 vaddr=30100000 size=00044h (    68) load
+I (103) esp_image: segment 2: paddr=0001ed5c vaddr=4ff00000 size=012bch (  4796) load
+I (110) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=26b90h (158608) map
+I (136) esp_image: segment 4: paddr=00046bb8 vaddr=4ff012bc size=0f5e4h ( 62948) load
+I (147) esp_image: segment 5: paddr=000561a4 vaddr=4ff10900 size=02358h (  9048) load
+I (154) boot: Loaded app from partition at offset 0x10000
+I (154) boot: Disabling RNG early entropy source...
+I (167) cpu_start: Multicore app
+I (178) cpu_start: Pro cpu start user code
+I (178) cpu_start: cpu freq: 360000000 Hz
+I (178) app_init: Application information:
+I (178) app_init: Project name:     tab5_dxft8_bringup
+I (183) app_init: App version:      62ed165-dirty
+I (187) app_init: Compile time:     Sep 18 2026 20:51:54
+I (192) app_init: ELF file SHA256:  50a2e418f...
+I (196) app_init: ESP-IDF:          v5.5.1
+I (200) efuse_init: Min chip rev:     v0.1
+I (204) efuse_init: Max chip rev:     v1.99 
+I (208) efuse_init: Chip rev:         v1.3
+I (212) heap_init: Initializing. RAM available for dynamic allocation:
+I (218) heap_init: At 4FF143F0 len 00026BD0 (154 KiB): RAM
+I (223) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (228) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+I (234) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+I (239) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+I (245) spi_flash: detected chip: generic
+I (248) spi_flash: flash io: qio
+I (251) main_task: Started on CPU0
+I (261) main_task: Calling app_main()
+I (261) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+I (261) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+I (271) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+W (271) tab5_bringup: REAL RF BOARD BENCH MODE: no LPF/TX interlock implemented
+I (581) tab5_bringup: RF board: G48=HIGH (power enabled), G47=HIGH (RX / TX off)
+W (581) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+I (591) tab5_bringup: probe PASS: found Si5351 at 0x60
+I (591) tab5_bringup: status PASS: device=0x11, interrupt=0xF8
+I (601) si5351: 7.074 MHz register vectors match the reviewed design
+I (601) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+I (621) si5351: verified registers 0x03..0x03
+I (621) si5351: verified registers 0x10..0x17
+I (621) si5351: verified registers 0x18..0x19
+I (621) si5351: verified registers 0x0F..0x0F
+I (631) si5351: verified registers 0xB7..0xB7
+I (641) si5351: verified registers 0x1A..0x21
+I (641) si5351: verified registers 0x22..0x29
+I (651) si5351: verified registers 0x2A..0x31
+I (651) si5351: verified registers 0x32..0x39
+I (651) si5351: verified registers 0x10..0x10
+I (651) si5351: verified registers 0x11..0x11
+I (661) si5351: verified PLL reset strobe self-cleared
+I (681) si5351: verified registers 0x03..0x03
+I (681) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (681) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+I (681) tab5_bringup: TX clock self-test disabled; RX clock selected for validation
+I (691) tab5_bringup: SI5351 SELF-TEST PASS
+I (701) si5351: verified registers 0x03..0x03
+I (701) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (711) tab5_bringup: front-end clock state: RX (CLK1 QSD on)
+W (711) tab5_bringup: CONTINUOUS I2S BENCH MODE: CLK1/QSD=28296000 Hz; CLK0 OFF; G48=HIGH, G47=HIGH; BS170s must remain absent
+I (721) tab5_bringup: starting PCM1808-compatible I2S validation
+I (731) pcm1808_i2s: configured I2S1 master RX: MCLK=GPIO16, BCLK=GPIO45, LRCK=GPIO3, DIN=GPIO4
+I (741) pcm1808_i2s: clocks: Fs=48000 Hz, MCLK=12288000 Hz (256fs), BCLK=3072000 Hz (64fs)
+I (741) tab5_bringup: I2S DIAGNOSTIC ACTIVE: clocks remain on for probing; flat data is reported, not treated as an ADC pass
+I (751) pcm1808_i2s: I2S DIAGNOSTIC RUNNING: clocks remain enabled; settling for one second; not an ADC PASS
+I (1741) pcm1808_i2s: diagnostic startup discard: 48000 frames
+I (2741) pcm1808_i2s: I2S DIAG window=1 frames=48000 padding_nonzero=0; raw first=00066B00/00040400 last=0004C000/FFE0D300 (L/R)
+I (2741) pcm1808_i2s: signed24 L[min=-14489 max=17969 mean=527 changes=47977] R[min=-19350 max=21640 mean=619 changes=47992] (consecutive word changes)
+I (2761) pcm1808_i2s: raw[0] L=0x00066B00 R=0x00040400
+I (2761) pcm1808_i2s: raw[1] L=0x0011AB00 R=0x00270C00
+I (2771) pcm1808_i2s: raw[2] L=0xFFEA0200 R=0x00090300
+I (2771) pcm1808_i2s: raw[3] L=0x000A7300 R=0x000AB200
+I (2781) pcm1808_i2s: raw[4] L=0xFFEE6B00 R=0x00204200
+I (2781) pcm1808_i2s: raw[5] L=0x000C4300 R=0xFFFE7100
+I (2791) pcm1808_i2s: raw[6] L=0x000CB300 R=0x00116100
+I (2791) pcm1808_i2s: raw[7] L=0x00043B00 R=0x00181100
+I (3771) pcm1808_i2s: I2S DIAG window=2 frames=48000 padding_nonzero=0; raw first=FFFF1D00/FFF44500 last=00139C00/001D1500 (L/R)
+I (3771) pcm1808_i2s: signed24 L[min=-16226 max=17103 mean=26 changes=47975] R[min=-19408 max=19798 mean=32 changes=47984] (consecutive word changes)
+I (4771) pcm1808_i2s: I2S DIAG window=3 frames=48000 padding_nonzero=0; raw first=00081B00/00191400 last=FFFC3C00/000AD300 (L/R)
+I (4771) pcm1808_i2s: signed24 L[min=-15028 max=14667 mean=6 changes=47978] R[min=-21099 max=17899 mean=15 changes=47981] (consecutive word changes)
+I (5771) pcm1808_i2s: I2S DIAG window=4 frames=48000 padding_nonzero=0; raw first=000B9C00/000AE300 last=FFFCB200/FFE12000 (L/R)
+I (5771) pcm1808_i2s: signed24 L[min=-15756 max=14193 mean=8 changes=47966] R[min=-20052 max=21495 mean=4 changes=47987] (consecutive word changes)
+I (6771) pcm1808_i2s: I2S DIAG window=5 frames=48000 padding_nonzero=0; raw first=000EE200/000D5100 last=00007700/00186D00 (L/R)
+I (6771) pcm1808_i2s: signed24 L[min=-15329 max=14706 mean=6 changes=47978] R[min=-20980 max=18544 mean=10 changes=47984] (consecutive word changes)
+I (7771) pcm1808_i2s: I2S DIAG window=6 frames=48000 padding_nonzero=0; raw first=FFFA0F00/00143400 last=FFED5D00/001D6A00 (L/R)
+I (7771) pcm1808_i2s: signed24 L[min=-15996 max=16451 mean=-5 changes=47980] R[min=-20126 max=18632 mean=0 changes=47985] (consecutive word changes)
+I (8771) pcm1808_i2s: I2S DIAG window=7 frames=48000 padding_nonzero=0; raw first=FFFFDE00/FFFF0100 last=000FAC00/FFF8EE00 (L/R)
+I (8771) pcm1808_i2s: signed24 L[min=-15916 max=16517 mean=7 changes=47977] R[min=-22379 max=20087 mean=-1 changes=47992] (consecutive word changes)
+I (9771) pcm1808_i2s: I2S DIAG window=8 frames=48000 padding_nonzero=0; raw first=0011A300/00133F00 last=FFE56E00/000E3500 (L/R)
+I (9771) pcm1808_i2s: signed24 L[min=-15855 max=16239 mean=-13 changes=47974] R[min=-18290 max=19021 mean=-7 changes=47978] (consecutive word changes)
+DIAGNOSTIC HARNESS OK: 8 windows; RF clocks=rx; ADC quality NOT certified; power and I2S clocks left running

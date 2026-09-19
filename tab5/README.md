@@ -9,8 +9,10 @@ dependency.
 
 Use this profile for manual scope measurements, with BS170s still absent.
 Unlike the CLK0 scope profile (which disables I2S), it keeps the three I2S
-clocks and RF-board power on continuously. G48 and G47 stay HIGH. After the
-initial Si5351 self-test, all Si5351 outputs are disabled, including CLK0.
+clocks and RF-board power on continuously. G48 and G47 stay HIGH. The current
+comparison-1 profile retains CLK1/QSD at 28.296 MHz (the original 7.074 MHz RX
+test plan); CLK0 and other outputs stay disabled. The one-second I2S startup
+discard and all I2S settings are unchanged from the all-RF-clocks-off baseline.
 
 ```sh
 source ~/esp/esp-idf/export.sh
@@ -19,8 +21,14 @@ idf.py -B build-i2s-diag -D SDKCONFIG=sdkconfig.i2s-diag \
   -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.i2s-diag.defaults' build
 idf.py -B build-i2s-diag -p /dev/cu.usbmodem101 flash
 cd ..
-python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 10
+python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 10 --rf-clocks rx
 ```
+
+`DXFT8_I2S_DIAGNOSTIC_RX_CLOCK` selects this comparison. To restore the earlier
+all-Si5351-outputs-off baseline, disable that option in
+`idf.py -B build-i2s-diag menuconfig`, rebuild/flash, and pass `--rf-clocks off`
+to the runner. The runner verifies both the requested RF-clock state and the
+48,000-frame startup discard. Existing local sdkconfig settings override defaults.
 
 The ADC diagnostic discards one second at startup, then continuously receives
 one-second windows. It logs raw 32-bit first/last samples, signed 24-bit

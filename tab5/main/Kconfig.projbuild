@@ -153,14 +153,24 @@ config DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
     bool "Continuous real-board I2S scope diagnostic (keeps clocks/power on)"
     depends on DXFT8_REAL_RF_BOARD
     help
-        Disable all Si5351 outputs and continuously receive the PCM1808 while
-        keeping G48 high and G47 high. Allow one second for startup, then log
+        Continuously receive the PCM1808 while keeping G48 high and G47 high.
+        By default all Si5351 outputs are off; the QSD comparison option below
+        retains CLK1 only. Allow one second for startup, then log
         raw samples and one-second statistics. Flat samples and padding errors
         are reported without switching off the clocks needed for probing.
         Actual I2S API/read errors remain fatal. Bench use only with BS170s
         absent; reset or remove power to stop. This is not an ADC pass/fail test.
 
 endchoice
+
+config DXFT8_I2S_DIAGNOSTIC_RX_CLOCK
+    bool "Keep CLK1/QSD enabled during continuous I2S diagnostic"
+    depends on DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+    default n
+    help
+        Controlled comparison against the all-RF-clocks-off diagnostic. Keep
+        the original RX test clock CLK1=28.296 MHz enabled; CLK0 stays disabled.
+        The one-second startup discard and I2S settings are unchanged.
 
 config DXFT8_I2S_TEST_FRAMES
     int "Frames to validate/capture"

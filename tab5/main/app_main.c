@@ -261,12 +261,21 @@ void app_main(void)
     ESP_LOGI(TAG, "SI5351 SELF-TEST PASS");
 
 #if CONFIG_DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+#if CONFIG_DXFT8_I2S_DIAGNOSTIC_RX_CLOCK
+    error = set_frontend_clock_state(&clock, FRONTEND_CLOCKS_RX, true);
+    if (error != ESP_OK) {
+        stop_on_failure(&clock, "retain RX clock for ADC comparison", error);
+    }
+    ESP_LOGW(TAG, "CONTINUOUS I2S BENCH MODE: CLK1/QSD=28296000 Hz; CLK0 OFF; "
+                  "G48=HIGH, G47=HIGH; BS170s must remain absent");
+#else
     error = set_frontend_clock_state(&clock, FRONTEND_CLOCKS_OFF, true);
     if (error != ESP_OK) {
         stop_on_failure(&clock, "disable RF clocks for ADC diagnostic", error);
     }
     ESP_LOGW(TAG, "CONTINUOUS I2S BENCH MODE: Si5351 outputs OFF; "
                   "G48=HIGH, G47=HIGH; BS170s must remain absent");
+#endif
 #endif
 
 #if CONFIG_DXFT8_RUN_I2S_SELF_TEST

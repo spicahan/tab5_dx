@@ -9,9 +9,13 @@ This repository keeps the two sides of the bench setup separate:
 
 For live ADC troubleshooting, use the
 [persistent I2S diagnostic profile](tab5/README.md#persistent-i2s-diagnostic-for-the-real-rf-board).
-It leaves RF power and I2S clocks enabled, with Si5351 outputs off. The first
+It leaves RF power and I2S clocks enabled, with either all Si5351 outputs off
+or CLK1/QSD retained for a controlled comparison. The first
 diagnostic capture showed varying left/right samples with zero padding errors;
 see the [diagnostic record](validation/2026-09-18-i2s.md).
+The [CLK1/QSD-on comparison](validation/2026-09-18-i2s-qsd-comparison.md) also
+completed three restarts with varying samples and zero padding errors while
+keeping the one-second startup wait unchanged.
 
 For the real RF daughter board's BS170s-absent 14.075 MHz scope test, use the
 [separate real-board profile](tab5/README.md#real-rf-board-14075-mhz-clk0-scope-test).
