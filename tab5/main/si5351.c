@@ -28,6 +28,8 @@
 #define SI5351_REG_PLLB_PARAMETERS   34U
 #define SI5351_REG_MS0_PARAMETERS    42U
 #define SI5351_REG_MS1_PARAMETERS    50U
+#define SI5351_REG_SPREAD_SPECTRUM   149U
+#define SI5351_REG_CLK0_PHASE        165U
 #define SI5351_REG_PLL_RESET         177U
 #define SI5351_REG_XTAL_LOAD         183U
 
@@ -42,6 +44,8 @@
 #define SI5351_CLOCK_INTEGER_PLLB    0x6FU
 #define SI5351_RESET_BOTH_PLLS       0xACU
 #define SI5351_RESET_STROBE_MASK     ((1U << 7) | (1U << 5))
+#define SI5351_SPREAD_SPECTRUM_ENABLE (1U << 7)
+#define SI5351_CARRIER_MS_DIVIDER    56U
 
 typedef struct {
     uint32_t a;
@@ -493,4 +497,115 @@ esp_err_t si5351_configure_40m_clock_plan(si5351_t *device, uint32_t rf_hz,
 
     // Safe default for a real daughter board: receive clock on, transmitter off.
     return si5351_set_enabled_outputs(device, SI5351_OUTPUT_CLK1, verify);
+}
+
+esp_err_t si5351_configure_clk0_carrier(si5351_t *device,
+                                        uint32_t frequency_hz, bool verify)
+{
+    ESP_RETURN_ON_FALSE(device != NULL && device->i2c_device != NULL,
+                        ESP_ERR_INVALID_ARG, TAG,
+                        "device is not initialized");
+
+    // Keep MS0 in even-integer mode around the 20 m band. R0 is divide-by-one;
+    // the supported frequency range follows directly from the PLL VCO limits.
+    const uint64_t pll_hz = (uint64_t)frequency_hz * SI5351_CARRIER_MS_DIVIDER;
+    ESP_RETURN_ON_FALSE(pll_hz >= SI5351_PLL_MIN_HZ &&
+                            pll_hz <= SI5351_PLL_MAX_HZ,
+                        ESP_ERR_INVALID_ARG, TAG,
+                        "carrier outside divide-by-56 range (10714286..16071428 Hz)");
+
+    si5351_synth_parameters_t pll = {0};
+    si5351_synth_parameters_t ms0 = {0};
+    ESP_RETURN_ON_ERROR(calculate_parameters(pll_hz, device->reference_hz,
+                                              15U, 90U, &pll),
+                        TAG, "cannot calculate carrier PLLA");
+    ESP_RETURN_ON_ERROR(calculate_parameters(pll_hz, frequency_hz,
+                                              8U, 1800U, &ms0),
+                        TAG, "cannot calculate carrier MS0");
+    ESP_RETURN_ON_FALSE(ms0.a == SI5351_CARRIER_MS_DIVIDER && ms0.b == 0U,
+                        ESP_ERR_INVALID_STATE, TAG,
+                        "carrier plan did not produce integer MS0");
+
+    uint8_t pll_registers[8];
+    uint8_t ms0_registers[8];
+    encode_parameters(&pll, pll_registers);
+    encode_parameters(&ms0, ms0_registers);
+
+    if (device->reference_hz == 26000000U && frequency_hz == 14075000U) {
+        // 26 MHz * (30 + 41/130) / 56 = 14.075 MHz exactly at nominal reference.
+        static const uint8_t expected_pll[8] = {
+            0x00U, 0x82U, 0x00U, 0x0DU, 0x28U, 0x00U, 0x00U, 0x30U,
+        };
+        static const uint8_t expected_ms0[8] = {
+            0x00U, 0x01U, 0x00U, 0x1AU, 0x00U, 0x00U, 0x00U, 0x00U,
+        };
+        ESP_RETURN_ON_FALSE(memcmp(pll_registers, expected_pll,
+                                   sizeof(expected_pll)) == 0 &&
+                                memcmp(ms0_registers, expected_ms0,
+                                       sizeof(expected_ms0)) == 0,
+                            ESP_ERR_INVALID_STATE, TAG,
+                            "14.075 MHz carrier register-vector regression");
+    }
+
+    ESP_LOGI(TAG,
+             "carrier plan: CLK0=%" PRIu32 " Hz, PLLA=%" PRIu64
+             " Hz, MS0=%u, reference=%" PRIu32 " Hz",
+             frequency_hz, pll_hz, SI5351_CARRIER_MS_DIVIDER,
+             device->reference_hz);
+
+    ESP_RETURN_ON_ERROR(prepare_device(device, verify), TAG,
+                        "carrier device preparation failed");
+
+    // A previously programmed device may have spread spectrum enabled. Retain
+    // its parameter bits but clear SSC_EN for a constant-frequency carrier.
+    uint8_t spread_spectrum = 0U;
+    ESP_RETURN_ON_ERROR(si5351_read_register(device,
+                                              SI5351_REG_SPREAD_SPECTRUM,
+                                              &spread_spectrum),
+                        TAG, "cannot read spread-spectrum control");
+    spread_spectrum &= (uint8_t)~SI5351_SPREAD_SPECTRUM_ENABLE;
+    ESP_RETURN_ON_ERROR(write_byte_checked(device,
+                                            SI5351_REG_SPREAD_SPECTRUM,
+                                            spread_spectrum, verify),
+                        TAG, "cannot disable spread spectrum");
+    ESP_RETURN_ON_ERROR(write_byte_checked(device, SI5351_REG_CLK0_PHASE,
+                                            0x00U, verify),
+                        TAG, "cannot clear CLK0 phase offset");
+    ESP_RETURN_ON_ERROR(write_checked(device, SI5351_REG_PLLA_PARAMETERS,
+                                       pll_registers, sizeof(pll_registers),
+                                       verify),
+                        TAG, "carrier PLLA programming failed");
+    ESP_RETURN_ON_ERROR(write_checked(device, SI5351_REG_MS0_PARAMETERS,
+                                       ms0_registers, sizeof(ms0_registers),
+                                       verify),
+                        TAG, "carrier MS0 programming failed");
+    ESP_RETURN_ON_ERROR(write_byte_checked(device, SI5351_REG_CLK0_CONTROL,
+                                            SI5351_CLOCK_INTEGER_PLLA, verify),
+                        TAG, "carrier CLK0 control programming failed");
+    ESP_RETURN_ON_ERROR(reset_plls(device, verify), TAG,
+                        "carrier PLL reset failed");
+
+    // PLLB is unused and may report loss-of-lock after reset. Only the reference,
+    // initialization and PLLA status determine whether CLK0 is ready to enable.
+    ESP_RETURN_ON_ERROR(wait_status_stably_clear(
+                            device,
+                            SI5351_STATUS_SYS_INIT |
+                                SI5351_STATUS_LOS_XTAL |
+                                SI5351_STATUS_LOL_A,
+                            1000U, 3U),
+                        TAG, "carrier PLLA did not lock");
+
+    const esp_err_t error = si5351_set_enabled_outputs(
+        device, SI5351_OUTPUT_CLK0, verify);
+    if (error != ESP_OK) {
+        // The enable write can succeed even if its verification read fails.
+        // Request all outputs off before propagating that failure to the caller.
+        const esp_err_t disable_error = si5351_set_enabled_outputs(device, 0U,
+                                                                   false);
+        if (disable_error != ESP_OK) {
+            ESP_LOGE(TAG, "carrier cleanup could not disable outputs: %s",
+                     esp_err_to_name(disable_error));
+        }
+    }
+    return error;
 }

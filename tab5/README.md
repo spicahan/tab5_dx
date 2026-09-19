@@ -1,9 +1,54 @@
 # Tab5 RF-board host bring-up
 
-Native ESP-IDF 5.5.1 firmware for exercising the RF-board mock—and later the
-real Si5351A and PCM1808—from the M5Stack Tab5. It is a UART-only bring-up
+Native ESP-IDF 5.5.1 firmware for exercising the RF-board mock or the
+real Si5351A and PCM1808 from the M5Stack Tab5. It is a UART-only bring-up
 program with no GUI, M5GFX, M5Unified, Wi-Fi, or other managed-component
 dependency.
+
+## Real RF board: 14.075 MHz CLK0 scope test
+
+**Use this profile only with the BS170s uninstalled.** It is not transmit
+firmware and does not implement the LPF/band interlock. The carrier starts
+again on every boot; replace this build before fitting the PA transistors.
+Disconnect the mock before connecting the real board (both use address 0x60).
+
+Barb's September 2026 *TAB5 DX Building and Programming port Info.pdf* maps
+G48 HIGH to main RF-board power enabled, and G47 HIGH to RX on / TX off.
+G48 is not the power source: the board still requires its battery-positive
+lead or an appropriate DC-input supply. Verify the supply, polarity, common
+ground, and M5-Bus header orientation before applying power.
+
+This separate configuration leaves the default mock build intact:
+
+```sh
+source ~/esp/esp-idf/export.sh
+cd ~/tab5_dxft8/tab5
+idf.py -B build-scope -D SDKCONFIG=sdkconfig.scope \
+  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.scope.defaults' build
+idf.py -B build-scope -p /dev/cu.usbmodem101 flash
+cd ..
+python tools/scope_validate.py --tab5 /dev/cu.usbmodem101 --runs 3
+```
+
+The scope build first sets G48 LOW and G47 HIGH, then enables G48 and waits
+200 ms for startup. It runs the existing Si5351 readback/lock checks with the
+7.074 MHz RX clock plan, followed by real PCM1808 sample statistics (12,000
+startup frames discarded, then 4,800 captured). On success it stops I2S clocks,
+disables Si5351 outputs during reprogramming, and leaves **CLK0 only** enabled
+at nominal 14,075,000 Hz. G47 stays HIGH throughout; no TX selection occurs.
+
+The carrier helper uses PLLA = 788.2 MHz and integer MS0 = 56 with a nominal
+26 MHz reference; spread spectrum is off, and register 3 ends at `0xFE`.
+All unused output drivers are powered down. Probe **CLK0 / TP1** relative to
+board GND with a high-impedance ×10 probe (not a 50-ohm load). Expected nominal
+period: about 71.05 ns. Register readback and PLL lock do not independently
+measure the physical output frequency or its amplitude.
+
+Any failed check requests all Si5351 outputs off and G48 LOW. If address 0x60
+does not answer, an address-only scan logs other responding internal-bus
+devices before shutdown. Restore the missing supply/connection and reset to
+retry. Software output initialization cannot guarantee safe GPIO levels
+during reset; the final hardware still needs suitable default biasing.
 
 ## Wiring for this milestone
 
@@ -97,15 +142,16 @@ The deterministic startup test:
 Any failure requests all Si5351 outputs off and leaves the error visible in the
 UART log. Register 3 output enables are active-low: `0xFF` disables all
 outputs, `0xFD` enables CLK1 only, and `0xFC` enables CLK0 and CLK1. These are
-clock states, not complete RF-path states. The daughter board's separate G47
-and G48 controls perform the actual complementary RX/TX switching; exercising
-those GPIOs is outside these I2C/I2S tests.
+clock states, not complete RF-path states. Per Barb's September assembly
+notes, G47 selects RX/TX and G48 controls main RF power; they are not
+complementary T/R outputs. The default mock profile does not drive these pins.
 
 For a mock-board acceptance run, enable
 `CONFIG_DXFT8_RUN_TX_PATH_SELF_TEST` with `idf.py menuconfig`. Its default is
 off: never enable this option with a powered PA or antenna connected. The test
-only changes Si5351 clock enables; it does not assert G47/G48. The normal final
-state is RX, never TX-ready.
+only changes Si5351 clock enables; it does not assert G47/G48. The default
+mock profile finishes in RX, never TX-ready. The real-board scope profile
+above is a separate, explicit CLK0-only exception with BS170s absent.
 
 ## I2S modes and production reuse
 

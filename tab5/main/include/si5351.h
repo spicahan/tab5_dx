@@ -63,6 +63,21 @@ esp_err_t si5351_wait_ready(si5351_t *device, uint32_t timeout_ms);
 esp_err_t si5351_configure_40m_clock_plan(si5351_t *device, uint32_t rf_hz,
                                           bool verify);
 
+/**
+ * Generate a continuous CLK0 carrier for the 20 m scope bring-up.
+ *
+ * Uses PLLA with MS0=56 and R0=1. Supported frequencies are 10,714,286 through
+ * 16,071,428 Hz; 14,075,000 Hz uses PLLA=788.2 MHz. The reference configured by
+ * si5351_init() is honored (the RF board uses a nominal 26 MHz external clock
+ * into XA). Frequency accuracy therefore follows that physical reference.
+ *
+ * Disables all outputs while programming, powers down unused drivers, disables
+ * spread spectrum, verifies PLLA lock, then enables CLK0 only at 8 mA drive.
+ * The caller must separately establish the RF board's power and TX/RX state.
+ */
+esp_err_t si5351_configure_clk0_carrier(si5351_t *device,
+                                        uint32_t frequency_hz, bool verify);
+
 /** Enable a logical set of CLK0..CLK7 outputs; zero disables every output. */
 esp_err_t si5351_set_enabled_outputs(si5351_t *device,
                                      uint8_t enabled_outputs, bool verify);

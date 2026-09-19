@@ -36,9 +36,50 @@
 #endif
 
 #define TEST_RF_HZ          7074000U
+#define SCOPE_CLK0_HZ       14075000U
 #define DEVICE_READY_TIMEOUT_MS 2000U
 
 static const char *TAG = "tab5_bringup";
+
+#if CONFIG_DXFT8_REAL_RF_BOARD
+#define RF_POWER_GPIO GPIO_NUM_48
+#define RF_RXSW_GPIO GPIO_NUM_47
+
+static esp_err_t enable_rf_board_power(void)
+{
+    // Preload the output latches before enabling the GPIO output drivers.
+    // Firmware cannot guarantee these levels during reset: hardware biasing
+    // remains necessary on a finished transceiver.
+    esp_err_t error = gpio_set_level(RF_POWER_GPIO, 0);
+    if (error != ESP_OK) {
+        return error;
+    }
+    error = gpio_set_level(RF_RXSW_GPIO, 1);
+    if (error != ESP_OK) {
+        return error;
+    }
+    const gpio_config_t control_pins = {
+        .pin_bit_mask = (1ULL << RF_POWER_GPIO) | (1ULL << RF_RXSW_GPIO),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_DISABLE,
+        .intr_type = GPIO_INTR_DISABLE,
+    };
+    error = gpio_config(&control_pins);
+    if (error != ESP_OK) {
+        return error;
+    }
+    // Give a previous powered run time to discharge before starting again.
+    vTaskDelay(pdMS_TO_TICKS(100));
+    error = gpio_set_level(RF_POWER_GPIO, 1);
+    if (error != ESP_OK) {
+        return error;
+    }
+    vTaskDelay(pdMS_TO_TICKS(200));
+    ESP_LOGI(TAG, "RF board: G48=HIGH (power enabled), G47=HIGH (RX / TX off)");
+    return ESP_OK;
+}
+#endif
 
 typedef enum {
     FRONTEND_CLOCKS_OFF,
@@ -61,8 +102,8 @@ static esp_err_t set_frontend_clock_state(si5351_t *clock,
         description = "RX (CLK1 QSD on)";
         break;
     case FRONTEND_CLOCKS_TX_READY:
-        // The QSD is hard-enabled on the RF board, so keep CLK1 running while
-        // adding CLK0 for the PA. G47/G48 perform the actual T/R switching.
+        // Mock-only register-mask exercise, not the real-board TX sequence.
+        // The real board uses G47 for RX/TX and G48 for main RF power.
         enabled_outputs = SI5351_OUTPUT_CLK0 | SI5351_OUTPUT_CLK1;
         description = "TX-ready (CLK0 PA + CLK1 QSD on)";
         break;
@@ -86,6 +127,11 @@ static void stop_on_failure(si5351_t *clock, const char *stage, esp_err_t error)
     if (clock != NULL && clock->i2c_device != NULL) {
         (void)set_frontend_clock_state(clock, FRONTEND_CLOCKS_OFF, false);
     }
+#if CONFIG_DXFT8_REAL_RF_BOARD
+    (void)gpio_set_level(RF_RXSW_GPIO, 1);
+    (void)gpio_set_level(RF_POWER_GPIO, 0);
+    ESP_LOGE(TAG, "RF power requested OFF (G48=LOW); RX selected (G47=HIGH)");
+#endif
     ESP_LOGE(TAG, "outputs requested OFF; reset the board to retry");
     while (true) {
         vTaskDelay(pdMS_TO_TICKS(1000));
@@ -103,6 +149,17 @@ void app_main(void)
     ESP_LOGI(TAG, "reference=%d Hz, %s",
              CONFIG_DXFT8_SI5351_REFERENCE_HZ,
              TAB5_SI5351_REFERENCE_DESCRIPTION);
+
+#if CONFIG_DXFT8_REAL_RF_BOARD
+    ESP_LOGW(TAG, "REAL RF BOARD BENCH MODE: no LPF/TX interlock implemented");
+    const esp_err_t power_error = enable_rf_board_power();
+    if (power_error != ESP_OK) {
+        stop_on_failure(NULL, "RF power/RX GPIO initialization", power_error);
+    }
+#endif
+#if CONFIG_DXFT8_SCOPE_CLK0_CARRIER
+    ESP_LOGW(TAG, "SCOPE MODE: BS170s must remain absent; CLK0 will stay on after checks");
+#endif
 
     const i2c_master_bus_config_t bus_config = {
         .i2c_port = I2C_NUM_0,
@@ -144,6 +201,19 @@ void app_main(void)
     } while ((xTaskGetTickCount() - probe_started) <
              pdMS_TO_TICKS(DEVICE_READY_TIMEOUT_MS));
     if (error != ESP_OK) {
+#if CONFIG_DXFT8_REAL_RF_BOARD
+        // Address-only probes help distinguish an absent RF device from a
+        // completely unavailable shared internal bus. Do not touch registers
+        // of the Tab5's other peripherals.
+        ESP_LOGW(TAG, "Si5351 absent; scanning internal I2C while RF power is enabled");
+        for (uint8_t address = 0x08U; address < 0x78U; ++address) {
+            if (i2c_master_probe(bus, address, 20) == ESP_OK) {
+                ESP_LOGI(TAG, "I2C diagnostic ACK: 0x%02X", address);
+            }
+        }
+        ESP_LOGW(TAG, "Check RF-board supply (battery+ lead / DC input), "
+                      "3.3 V rail, header seating and SDA/SCL; G48 is only an enable");
+#endif
         stop_on_failure(&clock, "address probe", error);
     }
     ESP_LOGI(TAG, "probe PASS: found Si5351 at 0x%02X",
@@ -185,7 +255,7 @@ void app_main(void)
     }
     ESP_LOGI(TAG, "RX/TX-ready/RX clock-state switching PASS");
 #else
-    ESP_LOGW(TAG, "TX clock self-test disabled; final state remains RX");
+    ESP_LOGI(TAG, "TX clock self-test disabled; RX clock selected for validation");
 #endif
 
     ESP_LOGI(TAG, "SI5351 SELF-TEST PASS");
@@ -257,5 +327,18 @@ void app_main(void)
     ESP_LOGW(TAG, "I2S self-test disabled; only the Si5351 test was run");
 #endif
 
+#if CONFIG_DXFT8_SCOPE_CLK0_CARRIER
+    error = si5351_configure_clk0_carrier(&clock, SCOPE_CLK0_HZ, true);
+    if (error != ESP_OK) {
+        stop_on_failure(&clock, "14.075 MHz CLK0 scope carrier", error);
+    }
+    ESP_LOGI(TAG, "ALL ENABLED SELF-TESTS PASS");
+    ESP_LOGI(TAG,
+             "CLK0 SCOPE READY: nominal %" PRIu32 " Hz; CLK0 only; "
+             "G48=HIGH, G47=HIGH; I2S clocks stopped", SCOPE_CLK0_HZ);
+    ESP_LOGW(TAG, "Scope CLK0/TP1 to board GND with a high-impedance probe; "
+                  "this carrier restarts on every boot");
+#else
     ESP_LOGI(TAG, "ALL ENABLED SELF-TESTS PASS; final RF clock state remains RX");
+#endif
 }

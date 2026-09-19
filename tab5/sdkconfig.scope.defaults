@@ -1,0 +1,8 @@
+# Add after sdkconfig.defaults using a SEPARATE sdkconfig and build directory.
+# Scope-only real-board bring-up. BS170s MUST remain uninstalled.
+CONFIG_DXFT8_REAL_RF_BOARD=y
+CONFIG_DXFT8_SCOPE_CLK0_CARRIER=y
+CONFIG_DXFT8_RUN_TX_PATH_SELF_TEST=n
+CONFIG_DXFT8_RUN_I2S_SELF_TEST=y
+CONFIG_DXFT8_I2S_MOCK_PATTERN_TEST=n
+CONFIG_DXFT8_I2S_CAPTURE_STATS=y

@@ -1,0 +1,50 @@
+SCOPE: reset 1/1
+addr=00010020 vaddr=40030020 size=0f0b8h ( 61624) map
+I (102) esp_image: segment 1: paddr=0001f0e0 vaddr=30100000 size=00044h (    68) load
+I (104) esp_image: segment 2: paddr=0001f12c vaddr=4ff00000 size=00eech (  3820) load
+I (110) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=2715ch (160092) map
+I (137) esp_image: segment 4: paddr=00047184 vaddr=4ff00eec size=0f9b4h ( 63924) load
+I (147) esp_image: segment 5: paddr=00056b40 vaddr=4ff10900 size=02358h (  9048) load
+I (154) boot: Loaded app from partition at offset 0x10000
+I (154) boot: Disabling RNG early entropy source...
+I (167) cpu_start: Multicore app
+I (178) cpu_start: Pro cpu start user code
+I (178) cpu_start: cpu freq: 360000000 Hz
+I (178) app_init: Application information:
+I (179) app_init: Project name:     tab5_dxft8_bringup
+I (183) app_init: App version:      b8b28e3-dirty
+I (187) app_init: Compile time:     Sep 18 2026 20:00:03
+I (192) app_init: ELF file SHA256:  a7672f18a...
+I (197) app_init: ESP-IDF:          v5.5.1
+I (200) efuse_init: Min chip rev:     v0.1
+I (204) efuse_init: Max chip rev:     v1.99 
+I (208) efuse_init: Chip rev:         v1.3
+I (212) heap_init: Initializing. RAM available for dynamic allocation:
+I (218) heap_init: At 4FF143F0 len 00026BD0 (154 KiB): RAM
+I (224) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (229) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+I (234) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+I (239) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+I (245) spi_flash: detected chip: generic
+I (248) spi_flash: flash io: qio
+I (251) main_task: Started on CPU0
+I (261) main_task: Calling app_main()
+I (261) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+I (261) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+I (271) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+W (271) tab5_bringup: REAL RF BOARD BENCH MODE: no LPF/TX interlock implemented
+I (581) tab5_bringup: RF board: G48=HIGH (power enabled), G47=HIGH (RX / TX off)
+W (581) tab5_bringup: SCOPE MODE: BS170s must remain absent; CLK0 will stay on after checks
+W (581) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+W (2591) tab5_bringup: Si5351 absent; scanning internal I2C while RF power is enabled
+I (2591) tab5_bringup: I2C diagnostic ACK: 0x10
+I (2591) tab5_bringup: I2C diagnostic ACK: 0x32
+I (2591) tab5_bringup: I2C diagnostic ACK: 0x40
+I (2591) tab5_bringup: I2C diagnostic ACK: 0x41
+I (2601) tab5_bringup: I2C diagnostic ACK: 0x43
+I (2601) tab5_bringup: I2C diagnostic ACK: 0x44
+I (2611) tab5_bringup: I2C diagnostic ACK: 0x68
+W (2611) tab5_bringup: Check RF-board supply (battery+ lead / DC input), 3.3 V rail, header seating and SDA/SCL; G48 is only an enable
+E (2621) tab5_bringup: SELF-TEST FAILED at address probe: ESP_ERR_NOT_FOUND
+E (2631) i2c.master: I2C transaction unexpected nack detected
+E (2641) i2c.master: s_i2c_synchronous_SCOPE FAIL: firmware failure in run 1

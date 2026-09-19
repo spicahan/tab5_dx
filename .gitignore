@@ -1,4 +1,7 @@
 build/
+build-scope/
 sdkconfig
 sdkconfig.old
+sdkconfig.scope
+sdkconfig.scope.old
 managed_components/

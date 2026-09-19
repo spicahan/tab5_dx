@@ -34,9 +34,12 @@ lock status after reset strobes, and validates the actual board clock plan:
 - CLK1: 28.296 MHz RX/QSD clock from PLLB;
 - register 3 = `0xFF` for all off, `0xFD` for RX, and `0xFC` for TX-ready.
 
-CLK1 deliberately remains enabled in the TX-ready state because the board's
-QSD is hard-enabled; G47/G48 perform the actual RF-path switching. The mock
-warns on unsafe initialization order, a TX-only `0xFE` clock state, enabled
+CLK1 remains enabled in this mock's original TX-ready clock-mask test.
+This is not the real board's full transmit sequence: Barb's September assembly
+notes specify G47 for RX/TX selection, G48 for main power, and CLK1 off in TX.
+The real-board CLK0-only scope profile is deliberately not supported by this
+mock acceptance model. The mock warns on initialization order, a TX-only
+`0xFE` clock state (outside its original acceptance contract), enabled
 unused outputs, missing PLL reset, wrong source/control registers, or invalid
 PLL/MultiSynth parameters.
 

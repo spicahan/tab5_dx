@@ -7,7 +7,11 @@ This repository keeps the two sides of the bench setup separate:
 - `tab5/` runs on the M5Stack Tab5 and contains reusable Si5351 and PCM1808
   host drivers plus UART-only integration tests.
 
-For the current I2C + I2S setup, power both boards independently over USB.
+For the real RF daughter board's BS170s-absent 14.075 MHz scope test, use the
+[separate real-board profile](tab5/README.md#real-rf-board-14075-mhz-clk0-scope-test).
+It enables G48 power, holds G47 in RX, tests the real ADC and programs CLK0.
+
+For the mock I2C + I2S setup, power both boards independently over USB.
 Connect I2C through the Tab5's internal M5-Bus port:
 
 | Signal | Tab5 M5-Bus | YD-ESP32-23 |
@@ -35,9 +39,11 @@ readback, PLL reset behavior, and the board's clock-enable states:
 - Si5351 register 3: `0xFF` for all clocks off, `0xFD` for RX (CLK1 only),
   and `0xFC` for the TX-ready clock state (CLK0 and CLK1).
 
-CLK1 remains running in the TX-ready clock state; the separate G47/G48 signals
-perform the actual RF-path RX/TX control and are outside these I2C/I2S
-tests. The optional TX clock-path exercise is disabled by default. See each
+CLK1 remains running in the mock's TX-ready clock state. Barb's September
+assembly notes instead specify G47 as RX/TX selection and G48 as main RF
+power, with CLK1 off for TX. The mock's clock-mask exercise is not that full
+hardware transmit sequence. The optional TX clock-path exercise is disabled
+by default and unavailable in real-board mode. See each
 subdirectory's README for build, flash, configuration, and safety details.
 
 The active-XA default writes register 183 as `0x12` (0 pF load setting). Both

@@ -1,5 +1,23 @@
 menu "TAB5 DXFT8 bring-up"
 
+config DXFT8_REAL_RF_BOARD
+    bool "Power the real RF daughter board (G48) and hold RX selected (G47)"
+    default n
+    help
+        Barb's September 2026 assembly notes define G48 high as RF power on
+        and G47 high as RX selected / TX off. The mock does not use these pins.
+        This is bench bring-up, not a complete transmitter or LPF interlock.
+
+config DXFT8_SCOPE_CLK0_CARRIER
+    bool "Leave CLK0 at 14.075 MHz after successful checks (BS170s absent only)"
+    depends on DXFT8_REAL_RF_BOARD
+    default n
+    help
+        Explicit scope-only mode: requires the BS170s to remain uninstalled.
+        Keeps G47 high, disables CLK1/CLK2, and leaves CLK0 running until power
+        is removed. It intentionally does not perform LPF sensing or enable TX.
+        Never use this build with a populated PA. It restarts on every boot.
+
 config DXFT8_TAB5_I2C_SDA_GPIO
     int "I2C SDA GPIO (M5-Bus default)"
     range 0 63
@@ -62,11 +80,12 @@ endchoice
 
 config DXFT8_RUN_TX_PATH_SELF_TEST
     bool "Briefly exercise the TX clock-enable mask"
+    depends on !DXFT8_REAL_RF_BOARD
     default n
     help
-        Enables CLK0 briefly while keeping CLK1/QSD running, matching the
-        RF-board's normal transmit clock state. This does not operate the
-        separate G47/G48 T/R controls.
+        Enables CLK0 briefly while keeping CLK1/QSD running to test the mock's
+        clock-enable masks. This is not the real board's transmit sequence:
+        G47 selects RX/TX, while G48 controls the main RF power switch.
         Enable this only for the RF-board mock acceptance test.  It must stay
         disabled when a powered PA or antenna is connected.
 
@@ -115,6 +134,7 @@ config DXFT8_TAB5_I2S_SAMPLE_RATE_HZ
 choice DXFT8_I2S_TEST_MODE
     prompt "I2S validation mode"
     depends on DXFT8_RUN_I2S_SELF_TEST
+    default DXFT8_I2S_CAPTURE_STATS if DXFT8_REAL_RF_BOARD
     default DXFT8_I2S_MOCK_PATTERN_TEST
     help
         Select the deterministic YD-board test for bench wiring, or ordinary
@@ -123,6 +143,7 @@ choice DXFT8_I2S_TEST_MODE
 
 config DXFT8_I2S_MOCK_PATTERN_TEST
     bool "Validate the YD-board mock pattern"
+    depends on !DXFT8_REAL_RF_BOARD
 
 config DXFT8_I2S_CAPTURE_STATS
     bool "Capture and summarize real PCM1808 samples"
