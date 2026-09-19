@@ -2,6 +2,7 @@ idf_component_register(
     SRCS
         "app_main.c"
         "pcm1808_i2s.c"
+        "rf_loopback.c"
         "si5351.c"
     INCLUDE_DIRS
         "include"

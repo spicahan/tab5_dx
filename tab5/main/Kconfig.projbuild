@@ -183,6 +183,23 @@ config DXFT8_I2S_DIAGNOSTIC_STARTUP_MS
         CLK1/QSD and I2S settings. This controls discarded sample frames,
         not a sleep: clocks run and RX is drained throughout the interval.
 
+config DXFT8_RX_LOOPBACK_BENCH
+    bool "BS170-absent RX leakage loopback: CLK0 source + CLK1 QSD"
+    depends on DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+    depends on DXFT8_I2S_DIAGNOSTIC_RX_CLOCK
+    default n
+    help
+        Bench only with every BS170 PA transistor absent. Holds G47 HIGH
+        (RX selected), G48 HIGH, CLK1 at 28.296 MHz, and I2S at 48 kHz.
+        Measures CLK0 off, 7.075 MHz on, off, 7.076 MHz on, then 7.075 MHz
+        on again. Expected beat tones are 1 and 2 kHz. Discards one second
+        before each one-second measurement and finally leaves the 1 kHz
+        source running with continuous I2S diagnostics for scope probing.
+        This deliberately bypasses normal mutually-exclusive RX/TX clock
+        operation. No LPF/TX interlock exists. Never fit BS170s or attach
+        an antenna with this firmware installed; power off first and
+        replace it before proceeding to a populated-PA test.
+
 config DXFT8_I2S_TEST_FRAMES
     int "Frames to validate/capture"
     depends on DXFT8_RUN_I2S_SELF_TEST

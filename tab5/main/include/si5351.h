@@ -64,6 +64,27 @@ esp_err_t si5351_configure_40m_clock_plan(si5351_t *device, uint32_t rf_hz,
                                           bool verify);
 
 /**
+ * Configure independent RX and source clocks for a BS170-absent bench test.
+ *
+ * CLK0 uses PLLA=112*source_frequency_hz and integer MS0=112; CLK1 uses
+ * PLLB=112*rx_frequency_hz and integer MS1=28, giving the QSD clock at 4*RX.
+ * Both input frequencies must be within 5,357,143..8,035,714 Hz. At nominal
+ * 26 MHz reference, RX=7,074,000 and source=7,075,000 or 7,076,000 Hz give
+ * exact nominal 1 kHz or 2 kHz offsets. Absolute accuracy follows the reference.
+ *
+ * Disables all outputs before configuring, clears spread spectrum and both
+ * phase offsets, checks both PLLs, and finishes with CLK1 ONLY enabled. The
+ * caller may then enable CLK0 alongside CLK1 for an A/B leakage measurement.
+ * On failure, requests all outputs disabled (best effort if I2C has failed).
+ * This function does not control board power or TX/RX GPIOs and is NOT a
+ * permission or interlock for operating a populated power amplifier.
+ */
+esp_err_t si5351_configure_rx_loopback(si5351_t *device,
+                                       uint32_t rx_frequency_hz,
+                                       uint32_t source_frequency_hz,
+                                       bool verify);
+
+/**
  * Generate a continuous CLK0 carrier for the 20 m scope bring-up.
  *
  * Uses PLLA with MS0=56 and R0=1. Supported frequencies are 10,714,286 through

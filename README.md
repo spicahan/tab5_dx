@@ -1,5 +1,15 @@
 # Tab5 DXFT8 firmware bring-up
 
+Working directory: `~/tab5_dx` (renamed from `~/tab5_dxft8`; Git history kept).
+
+The [BS170-absent RX leakage loopback](tab5/README.md#rx-leakage-loopback-bs170s-absent)
+keeps G47 HIGH/RX selected and compares CLK0 OFF with 1/2 kHz offset carriers
+while CLK1 and I2S run. It uses a one-second discard and is not powered-PA
+firmware. Never fit the BS170s while this test build is installed.
+The [first loopback result](validation/2026-09-18-rx-loopback.md) shows strong
+1/2 kHz frequency-following I/Q response with near-90-degree relative phase,
+zero ADC rail hits in the measured windows and zero I2S padding errors.
+
 This repository keeps the two sides of the bench setup separate:
 
 - `rf_board_mock/` runs on the YD-ESP32-23 and emulates both the RF daughter
@@ -20,9 +30,10 @@ The [250 ms startup comparison](validation/2026-09-18-i2s-250ms-comparison.md)
 reproduced the original constant -1 short capture on all three restarts:
 both channels began changing about 108 ms after the discard, then continued
 with zero padding errors. This points to premature startup validation, not
-a persistently dead I2S link. The current diagnostic profile retains 250 ms
-to reproduce this result; use the previously tested one-second discard for
-normal bring-up acceptance pending wider startup testing.
+a persistently dead I2S link. The current diagnostic profile and short-capture
+real-ADC acceptance path now use the previously tested one-second discard
+for normal bring-up. The 250 ms record remains a historical comparison;
+wider cold-start and analog-path testing is still needed.
 
 For the real RF daughter board's BS170s-absent 14.075 MHz scope test, use the
 [separate real-board profile](tab5/README.md#real-rf-board-14075-mhz-clk0-scope-test).
@@ -115,7 +126,7 @@ After building and flashing both boards, close any serial monitors and run:
 
 ```sh
 source ~/esp/esp-idf/export.sh
-cd ~/tab5_dxft8
+cd ~/tab5_dx
 python tools/bench_validate.py --mock /dev/cu.usbmodem5A7A0113341 --tab5 /dev/cu.usbmodem101 --runs 3
 ```
 

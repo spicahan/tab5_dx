@@ -1,0 +1,243 @@
+I2S DIAGNOSTIC: resetting Tab5; sample-quality warnings are expected
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x17 (CHIP_USB_UART_RESET),boot:0x20c (SPI_FAST_FLASH_BOOT)
+Core0 Saved PC:0x4ff02e9a
+Core1 Saved PC:0x4ff02e9a
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x17a4
+load:0x4ff29ed0,len:0xfc0
+load:0x4ff2cbd0,len:0x345c
+entry 0x4ff29eda
+I (27) boot: ESP-IDF v5.5.1 2nd stage bootloader
+I (28) boot: compile time Sep 18 2026 21:09:58
+I (28) boot: Multicore bootloader
+I (29) boot: chip revision: v1.3
+I (31) boot: efuse block revision: v0.3
+I (34) qio_mode: Enabling default flash chip QIO
+I (39) boot.esp32p4: SPI Speed      : 80MHz
+I (42) boot.esp32p4: SPI Mode       : QIO
+I (46) boot.esp32p4: SPI Flash Size : 16MB
+I (50) boot: Enabling RNG early entropy source...
+I (55) boot: Partition Table:
+I (57) boot: ## Label            Usage          Type ST Offset   Length
+I (63) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (70) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (76) boot:  2 factory          factory app      00 00 00010000 00100000
+I (84) boot: End of partition table
+I (86) esp_image: segment 0: paddr=00010020 vaddr=40030020 size=0fdf8h ( 65016) map
+I (102) esp_image: segment 1: paddr=0001fe20 vaddr=30100000 size=00044h (    68) load
+I (104) esp_image: segment 2: paddr=0001fe6c vaddr=4ff00000 size=001ach (   428) load
+I (109) esp_image: segment 3: paddr=00020020 vaddr=40000020 size=2b054h (176212) map
+I (138) esp_image: segment 4: paddr=0004b07c vaddr=4ff001ac size=106f4h ( 67316) load
+I (150) esp_image: segment 5: paddr=0005b778 vaddr=4ff10900 size=02358h (  9048) load
+I (156) boot: Loaded app from partition at offset 0x10000
+I (157) boot: Disabling RNG early entropy source...
+I (170) cpu_start: Multicore app
+I (180) cpu_start: Pro cpu start user code
+I (181) cpu_start: cpu freq: 360000000 Hz
+I (181) app_init: Application information:
+I (181) app_init: Project name:     tab5_dxft8_bringup
+I (185) app_init: App version:      f56d1ac-dirty
+I (190) app_init: Compile time:     Sep 18 2026 21:09:50
+I (195) app_init: ELF file SHA256:  4331f373f...
+I (199) app_init: ESP-IDF:          v5.5.1
+I (203) efuse_init: Min chip rev:     v0.1
+I (207) efuse_init: Max chip rev:     v1.99 
+I (211) efuse_init: Chip rev:         v1.3
+I (215) heap_init: Initializing. RAM available for dynamic allocation:
+I (221) heap_init: At 4FF143F0 len 00026BD0 (154 KiB): RAM
+I (226) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (231) heap_init: At 4FF40000 len 00060000 (384 KiB): RAM
+I (237) heap_init: At 50108080 len 00007F80 (31 KiB): RTCRAM
+I (242) heap_init: At 30100044 len 00001FBC (7 KiB): TCM
+I (247) spi_flash: detected chip: generic
+I (251) spi_flash: flash io: qio
+I (254) main_task: Started on CPU0
+I (264) main_task: Calling app_main()
+I (264) tab5_bringup: TAB5 DXFT8 Si5351 host self-test
+I (264) tab5_bringup: I2C host: SDA=GPIO31, SCL=GPIO32, address=0x60
+I (274) tab5_bringup: reference=26000000 Hz, external clock on XA (0 pF)
+W (274) tab5_bringup: REAL RF BOARD BENCH MODE: no LPF/TX interlock implemented
+I (584) tab5_bringup: RF board: G48=HIGH (power enabled), G47=HIGH (RX / TX off)
+W (584) i2c.master: Please check pull-up resistances whether be connected properly. Otherwise unexpected behavior would happen. For more detailed information, please read docs
+I (594) tab5_bringup: probe PASS: found Si5351 at 0x60
+I (594) tab5_bringup: status PASS: device=0x11, interrupt=0xF8
+I (604) si5351: 7.074 MHz register vectors match the reviewed design
+I (604) si5351: 40 m plan: RF=7074000 Hz, TX CLK0=7074000 Hz, RX CLK1=28296000 Hz, PLLA/B=792288000 Hz
+I (624) si5351: verified registers 0x03..0x03
+I (624) si5351: verified registers 0x10..0x17
+I (624) si5351: verified registers 0x18..0x19
+I (624) si5351: verified registers 0x0F..0x0F
+I (634) si5351: verified registers 0xB7..0xB7
+I (644) si5351: verified registers 0x1A..0x21
+I (644) si5351: verified registers 0x22..0x29
+I (654) si5351: verified registers 0x2A..0x31
+I (654) si5351: verified registers 0x32..0x39
+I (654) si5351: verified registers 0x10..0x10
+I (654) si5351: verified registers 0x11..0x11
+I (664) si5351: verified PLL reset strobe self-cleared
+I (684) si5351: verified registers 0x03..0x03
+I (684) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (684) tab5_bringup: 7.074 MHz plan PASS: RX CLK1=28.296 MHz enabled; TX CLK0=7.074 MHz configured but disabled
+I (684) tab5_bringup: TX clock self-test disabled; RX clock selected for validation
+I (694) tab5_bringup: SI5351 SELF-TEST PASS
+I (704) si5351: verified registers 0x03..0x03
+I (704) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (714) tab5_bringup: front-end clock state: RX (CLK1 QSD on)
+W (714) tab5_bringup: CONTINUOUS I2S BENCH MODE: CLK1/QSD=28296000 Hz; CLK0 OFF; G48=HIGH, G47=HIGH; BS170s must remain absent
+I (724) tab5_bringup: starting PCM1808-compatible I2S validation
+I (734) pcm1808_i2s: configured I2S1 master RX: MCLK=GPIO16, BCLK=GPIO45, LRCK=GPIO3, DIN=GPIO4
+I (744) pcm1808_i2s: clocks: Fs=48000 Hz, MCLK=12288000 Hz (256fs), BCLK=3072000 Hz (64fs)
+W (744) tab5_bringup: RX LOOPBACK BENCH: BS170s MUST be absent; no antenna; G48=HIGH, G47=HIGH; one-second drain before each measurement
+I (764) si5351: verified registers 0x03..0x03
+I (764) si5351: enabled output mask=0x00 (register 3=0xFF)
+I (774) si5351: RX loopback nominal 26 MHz register vectors match
+I (774) si5351: loopback plan: RX=7074000 Hz, source CLK0=7075000 Hz, QSD CLK1=28296000 Hz, PLLA=792400000 Hz, PLLB=792288000 Hz
+I (794) si5351: verified registers 0x03..0x03
+I (794) si5351: verified registers 0x10..0x17
+I (794) si5351: verified registers 0x18..0x19
+I (804) si5351: verified registers 0x0F..0x0F
+I (804) si5351: verified registers 0xB7..0xB7
+I (804) si5351: verified registers 0x95..0x95
+I (814) si5351: verified registers 0xA5..0xA6
+I (824) si5351: verified registers 0x1A..0x21
+I (824) si5351: verified registers 0x22..0x29
+I (834) si5351: verified registers 0x2A..0x31
+I (834) si5351: verified registers 0x32..0x39
+I (834) si5351: verified registers 0x10..0x10
+I (834) si5351: verified registers 0x11..0x11
+I (844) si5351: verified PLL reset strobe self-cleared
+I (864) si5351: verified registers 0x03..0x03
+I (864) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (864) si5351: verified registers 0x03..0x03
+I (864) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (864) tab5_bringup: LOOPBACK STATE OFF_BEFORE: CLK0=7075000 Hz OFF; CLK1=28296000 Hz; RX=7074000 Hz; G47=HIGH
+I (874) rf_loopback: RF LOOPBACK begin label=OFF_BEFORE discard_ms=1000 capture_ms=1000 Fs=48000
+I (2864) rf_loopback: RF LOOPBACK label=OFF_BEFORE frames=48000 discard_frames=48000 padding_nonzero=0
+I (2864) rf_loopback: RF LOOPBACK L min=-16267 max=13062 dc=-975.140 rms_ac=3724.108 rail_hits=0
+I (2864) rf_loopback: RF LOOPBACK R min=-20002 max=17147 dc=-482.600 rms_ac=4665.983 rail_hits=0
+I (2874) rf_loopback: RF LOOPBACK tone=1000 Hz L_peak=6.577 L_dBFS=-122.11 R_peak=3.876 R_dBFS=-126.71 phase_R-L=77.30 deg
+I (2884) rf_loopback: RF LOOPBACK tone=2000 Hz L_peak=13.227 L_dBFS=-116.04 R_peak=30.373 R_dBFS=-108.82 phase_R-L=17.07 deg
+I (2894) rf_loopback: RF LOOPBACK measurement complete; not an analog PASS; tone peak reference=2^23, phase meaningful only above noise
+I (2914) si5351: verified registers 0x03..0x03
+I (2914) si5351: enabled output mask=0x03 (register 3=0xFC)
+I (2914) tab5_bringup: LOOPBACK STATE ON_1KHZ: CLK0=7075000 Hz ON; CLK1=28296000 Hz; RX=7074000 Hz; G47=HIGH
+I (2924) rf_loopback: RF LOOPBACK begin label=ON_1KHZ discard_ms=1000 capture_ms=1000 Fs=48000
+I (4914) rf_loopback: RF LOOPBACK label=ON_1KHZ frames=48000 discard_frames=48000 padding_nonzero=0
+I (4914) rf_loopback: RF LOOPBACK L min=-1622640 max=1582772 dc=-14.269 rms_ac=999885.447 rail_hits=0
+I (4914) rf_loopback: RF LOOPBACK R min=-1715045 max=1546024 dc=30.720 rms_ac=1004164.839 rail_hits=0
+I (4924) rf_loopback: RF LOOPBACK tone=1000 Hz L_peak=1283805.122 L_dBFS=-16.30 R_peak=1279146.360 R_dBFS=-16.34 phase_R-L=91.77 deg
+I (4934) rf_loopback: RF LOOPBACK tone=2000 Hz L_peak=1002.244 L_dBFS=-78.45 R_peak=2321.880 R_dBFS=-71.16 phase_R-L=39.13 deg
+I (4944) rf_loopback: RF LOOPBACK measurement complete; not an analog PASS; tone peak reference=2^23, phase meaningful only above noise
+I (4964) si5351: verified registers 0x03..0x03
+I (4964) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (4974) tab5_bringup: LOOPBACK STATE OFF_AFTER: CLK0=7075000 Hz OFF; CLK1=28296000 Hz; RX=7074000 Hz; G47=HIGH
+I (4984) rf_loopback: RF LOOPBACK begin label=OFF_AFTER discard_ms=1000 capture_ms=1000 Fs=48000
+I (6964) rf_loopback: RF LOOPBACK label=OFF_AFTER frames=48000 discard_frames=48000 padding_nonzero=0
+I (6964) rf_loopback: RF LOOPBACK L min=-13844 max=14901 dc=-12.497 rms_ac=3493.319 rail_hits=0
+I (6974) rf_loopback: RF LOOPBACK R min=-17851 max=18121 dc=-0.196 rms_ac=4614.029 rail_hits=0
+I (6984) rf_loopback: RF LOOPBACK tone=1000 Hz L_peak=5.780 L_dBFS=-123.23 R_peak=24.565 R_dBFS=-110.67 phase_R-L=144.57 deg
+I (6994) rf_loopback: RF LOOPBACK tone=2000 Hz L_peak=22.503 L_dBFS=-111.43 R_peak=7.019 R_dBFS=-121.55 phase_R-L=59.61 deg
+I (7004) rf_loopback: RF LOOPBACK measurement complete; not an analog PASS; tone peak reference=2^23, phase meaningful only above noise
+I (7014) si5351: verified registers 0x03..0x03
+I (7014) si5351: enabled output mask=0x00 (register 3=0xFF)
+I (7024) si5351: RX loopback nominal 26 MHz register vectors match
+I (7024) si5351: loopback plan: RX=7074000 Hz, source CLK0=7076000 Hz, QSD CLK1=28296000 Hz, PLLA=792512000 Hz, PLLB=792288000 Hz
+I (7054) si5351: verified registers 0x03..0x03
+I (7054) si5351: verified registers 0x10..0x17
+I (7054) si5351: verified registers 0x18..0x19
+I (7054) si5351: verified registers 0x0F..0x0F
+I (7054) si5351: verified registers 0xB7..0xB7
+I (7064) si5351: verified registers 0x95..0x95
+I (7064) si5351: verified registers 0xA5..0xA6
+I (7074) si5351: verified registers 0x1A..0x21
+I (7084) si5351: verified registers 0x22..0x29
+I (7084) si5351: verified registers 0x2A..0x31
+I (7084) si5351: verified registers 0x32..0x39
+I (7094) si5351: verified registers 0x10..0x10
+I (7094) si5351: verified registers 0x11..0x11
+I (7094) si5351: verified PLL reset strobe self-cleared
+I (7124) si5351: verified registers 0x03..0x03
+I (7124) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (7124) si5351: verified registers 0x03..0x03
+I (7124) si5351: enabled output mask=0x03 (register 3=0xFC)
+I (7124) tab5_bringup: LOOPBACK STATE ON_2KHZ: CLK0=7076000 Hz ON; CLK1=28296000 Hz; RX=7074000 Hz; G47=HIGH
+I (7134) rf_loopback: RF LOOPBACK begin label=ON_2KHZ discard_ms=1000 capture_ms=1000 Fs=48000
+I (9124) rf_loopback: RF LOOPBACK label=ON_2KHZ frames=48000 discard_frames=48000 padding_nonzero=0
+I (9124) rf_loopback: RF LOOPBACK L min=-1575879 max=1620576 dc=-677.652 rms_ac=974377.890 rail_hits=0
+I (9124) rf_loopback: RF LOOPBACK R min=-1651706 max=1615324 dc=-1096.213 rms_ac=991057.254 rail_hits=0
+I (9134) rf_loopback: RF LOOPBACK tone=1000 Hz L_peak=27.527 L_dBFS=-109.68 R_peak=97.557 R_dBFS=-98.69 phase_R-L=128.97 deg
+I (9144) rf_loopback: RF LOOPBACK tone=2000 Hz L_peak=1255821.164 L_dBFS=-16.50 R_peak=1271074.098 R_dBFS=-16.39 phase_R-L=90.75 deg
+I (9154) rf_loopback: RF LOOPBACK measurement complete; not an analog PASS; tone peak reference=2^23, phase meaningful only above noise
+I (9174) si5351: verified registers 0x03..0x03
+I (9174) si5351: enabled output mask=0x00 (register 3=0xFF)
+I (9184) si5351: RX loopback nominal 26 MHz register vectors match
+I (9184) si5351: loopback plan: RX=7074000 Hz, source CLK0=7075000 Hz, QSD CLK1=28296000 Hz, PLLA=792400000 Hz, PLLB=792288000 Hz
+I (9204) si5351: verified registers 0x03..0x03
+I (9204) si5351: verified registers 0x10..0x17
+I (9204) si5351: verified registers 0x18..0x19
+I (9214) si5351: verified registers 0x0F..0x0F
+I (9214) si5351: verified registers 0xB7..0xB7
+I (9224) si5351: verified registers 0x95..0x95
+I (9224) si5351: verified registers 0xA5..0xA6
+I (9234) si5351: verified registers 0x1A..0x21
+I (9234) si5351: verified registers 0x22..0x29
+I (9244) si5351: verified registers 0x2A..0x31
+I (9244) si5351: verified registers 0x32..0x39
+I (9244) si5351: verified registers 0x10..0x10
+I (9244) si5351: verified registers 0x11..0x11
+I (9254) si5351: verified PLL reset strobe self-cleared
+I (9274) si5351: verified registers 0x03..0x03
+I (9274) si5351: enabled output mask=0x02 (register 3=0xFD)
+I (9274) si5351: verified registers 0x03..0x03
+I (9274) si5351: enabled output mask=0x03 (register 3=0xFC)
+I (9274) tab5_bringup: LOOPBACK STATE HOLD_1KHZ: CLK0=7075000 Hz ON; CLK1=28296000 Hz; RX=7074000 Hz; G47=HIGH
+I (9284) rf_loopback: RF LOOPBACK begin label=HOLD_1KHZ discard_ms=1000 capture_ms=1000 Fs=48000
+I (11274) rf_loopback: RF LOOPBACK label=HOLD_1KHZ frames=48000 discard_frames=48000 padding_nonzero=0
+I (11274) rf_loopback: RF LOOPBACK L min=-1622821 max=1583729 dc=79.938 rms_ac=999780.842 rail_hits=0
+I (11274) rf_loopback: RF LOOPBACK R min=-1717075 max=1548655 dc=-523.632 rms_ac=1004166.154 rail_hits=0
+I (11284) rf_loopback: RF LOOPBACK tone=1000 Hz L_peak=1283662.924 L_dBFS=-16.30 R_peak=1279181.321 R_dBFS=-16.34 phase_R-L=91.77 deg
+I (11294) rf_loopback: RF LOOPBACK tone=2000 Hz L_peak=972.407 L_dBFS=-78.72 R_peak=2340.192 R_dBFS=-71.09 phase_R-L=34.36 deg
+I (11314) rf_loopback: RF LOOPBACK measurement complete; not an analog PASS; tone peak reference=2^23, phase meaningful only above noise
+W (11324) tab5_bringup: RX LOOPBACK HOLD: CLK0=7075000 Hz; CLK1=28296000 Hz; expected beat=1000 Hz; G48=HIGH, G47=HIGH; I2S remains active; BS170s MUST remain absent
+I (11334) tab5_bringup: I2S DIAGNOSTIC ACTIVE: clocks remain on for probing; flat data is reported, not treated as an ADC pass
+I (11344) pcm1808_i2s: I2S DIAGNOSTIC RUNNING: clocks remain enabled; startup_discard_ms=1000 startup_discard_frames=48000; not an ADC PASS
+I (12334) pcm1808_i2s: diagnostic startup discard: 48000 frames
+I (13334) pcm1808_i2s: I2S INITIAL 100MS frames=4800 padding_nonzero=0; L[min=-1612735 max=1582546 mean=20 changes=4799] R[min=-1712506 max=1541228 mean=103 changes=4799]; raw first=01EAED00/E88BAB00 last=FFFB6000/EB193D00 (L/R)
+I (13344) pcm1808_i2s: I2S FIRST CHANGE frame_offset L=1 R=1 (zero-based post-discard; -1=no change in first window)
+I (13354) pcm1808_i2s: I2S DIAG window=1 frames=48000 padding_nonzero=0; raw first=01EAED00/E88BAB00 last=00ADD900/E8055500 (L/R)
+I (13364) pcm1808_i2s: signed24 L[min=-1620997 max=1582546 mean=3 changes=47999] R[min=-1717157 max=1550306 mean=28 changes=47999] (consecutive word changes)
+I (13374) pcm1808_i2s: raw[0] L=0x01EAED00 R=0xE88BAB00
+I (13384) pcm1808_i2s: raw[1] L=0xEF9F6E00 R=0xFB606F00
+I (13384) pcm1808_i2s: raw[2] L=0xE7D77100 R=0x03441C00
+I (13394) pcm1808_i2s: raw[3] L=0xEB9BBA00 R=0xFE4DDA00
+I (13394) pcm1808_i2s: raw[4] L=0xEB8E6500 R=0xFF2BEF00
+I (13404) pcm1808_i2s: raw[5] L=0xEA816900 R=0x0014A600
+I (13404) pcm1808_i2s: raw[6] L=0xEAE80500 R=0xFEA1CD00
+I (13414) pcm1808_i2s: raw[7] L=0xE90CEE00 R=0x012C7800
+I (14384) pcm1808_i2s: I2S DIAG window=2 frames=48000 padding_nonzero=0; raw first=FFF06D00/EAF92F00 last=01A15D00/EC17BD00 (L/R)
+I (14384) pcm1808_i2s: signed24 L[min=-1625012 max=1583600 mean=0 changes=47999] R[min=-1715520 max=1549123 mean=32 changes=47999] (consecutive word changes)
+I (15384) pcm1808_i2s: I2S DIAG window=3 frames=48000 padding_nonzero=0; raw first=00C65000/E7EF8C00 last=01632600/E9D48600 (L/R)
+I (15384) pcm1808_i2s: signed24 L[min=-1624617 max=1584482 mean=-8 changes=47999] R[min=-1714902 max=1544461 mean=12 changes=47999] (consecutive word changes)
+I (16384) pcm1808_i2s: I2S DIAG window=4 frames=48000 padding_nonzero=0; raw first=01C5FB00/EC13AF00 last=0026AB00/E975D900 (L/R)
+I (16384) pcm1808_i2s: signed24 L[min=-1622335 max=1583152 mean=-6 changes=47999] R[min=-1716067 max=1547521 mean=23 changes=47998] (consecutive word changes)
+I (17384) pcm1808_i2s: I2S DIAG window=5 frames=48000 padding_nonzero=0; raw first=01150200/E9BB9E00 last=01EB3A00/EA411900 (L/R)
+I (17384) pcm1808_i2s: signed24 L[min=-1621425 max=1583102 mean=16 changes=47998] R[min=-1718791 max=1545915 mean=41 changes=47999] (consecutive word changes)
+I (18384) pcm1808_i2s: I2S DIAG window=6 frames=48000 padding_nonzero=0; raw first=00459200/E9862F00 last=005EB900/EAA7BB00 (L/R)
+I (18384) pcm1808_i2s: signed24 L[min=-1624983 max=1582754 mean=-24 changes=47999] R[min=-1716020 max=1549130 mean=12 changes=47999] (consecutive word changes)
+I (19384) pcm1808_i2s: I2S DIAG window=7 frames=48000 padding_nonzero=0; raw first=01E8A600/EA572600 last=02347000/EBC13400 (L/R)
+I (19384) pcm1808_i2s: signed24 L[min=-1626215 max=1581813 mean=-1 changes=47999] R[min=-1719407 max=1546770 mean=30 changes=47999] (consecutive word changes)
+I (20384) pcm1808_i2s: I2S DIAG window=8 frames=48000 padding_nonzero=0; raw first=00980700/EAB32600 last=00388F00/E8A1F200 (L/R)
+I (20384) pcm1808_i2s: signed24 L[min=-1622786 max=1583911 mean=-6 changes=47999] R[min=-1715340 max=1545360 mean=21 changes=47999] (consecutive word changes)
+I (21384) pcm1808_i2s: I2S DIAG window=9 frames=48000 padding_nonzero=0; raw first=022E7D00/EB868C00 last=FF73A000/E93E4200 (L/R)
+I (21384) pcm1808_i2s: signed24 L[min=-1622879 max=1581631 mean=7 changes=47999] R[min=-1715666 max=1545422 mean=21 changes=47999] (consecutive word changes)
+I (22384) pcm1808_i2s: I2S DIAG window=10 frames=48000 padding_nonzero=0; raw first=FFFF1400/E8349000 last=1460B400/FF1D3200 (L/R)
+I (22384) pcm1808_i2s: signed24 L[min=-1621542 max=1584106 mean=11 changes=47999] R[min=-1716422 max=1548711 mean=29 changes=47999] (consecutive word changes)
+I (23384) pcm1808_i2s: I2S DIAG window=11 frames=48000 padding_nonzero=0; raw first=00259100/EA1D6900 last=1606CF00/0061E200 (L/R)
+I (23384) pcm1808_i2s: signed24 L[min=-1623070 max=1582595 mean=-42 changes=47999] R[min=-1718140 max=1546483 mean=-13 changes=47999] (consecutive word changes)
+I (24384) pcm1808_i2s: I2S DIAG window=12 frames=48000 padding_nonzero=0; raw first=15302700/FFFC9700 last=176F4F00/002BE000 (L/R)
+I (24384) pcm1808_i2s: signed24 L[min=-1622636 max=1582018 mean=-37 changes=47999] R[min=-1718323 max=1549034 mean=-2 changes=47999] (consecutive word changes)
+I (25384) pcm1808_i2s: I2S DIAG window=13 frames=48000 padding_nonzero=0; raw first=15E22400/00011F00 last=15594200/00321D00 (L/R)
+I (25384) pcm1808_i2s: signed24 L[min=-1622978 max=1582605 mean=-35 changes=47998] R[min=-1719339 max=1546442 mean=-21 changes=47999] (consecutive word changes)
+DIAGNOSTIC HARNESS OK: 13 windows; RF clocks=loopback; startup=1000 ms; ADC quality NOT certified; power and I2S clocks left running

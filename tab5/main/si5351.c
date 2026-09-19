@@ -499,6 +499,172 @@ esp_err_t si5351_configure_40m_clock_plan(si5351_t *device, uint32_t rf_hz,
     return si5351_set_enabled_outputs(device, SI5351_OUTPUT_CLK1, verify);
 }
 
+static esp_err_t configure_rx_loopback(si5351_t *device,
+                                        uint32_t rx_frequency_hz,
+                                        uint32_t source_frequency_hz,
+                                        bool verify)
+{
+    const uint64_t plla_hz = (uint64_t)source_frequency_hz * 112ULL;
+    const uint64_t pllb_hz = (uint64_t)rx_frequency_hz * 112ULL;
+    ESP_RETURN_ON_FALSE(plla_hz >= SI5351_PLL_MIN_HZ &&
+                            plla_hz <= SI5351_PLL_MAX_HZ &&
+                            pllb_hz >= SI5351_PLL_MIN_HZ &&
+                            pllb_hz <= SI5351_PLL_MAX_HZ,
+                        ESP_ERR_INVALID_ARG, TAG,
+                        "loopback frequencies outside divide-by-112 range "
+                        "(5357143..8035714 Hz)");
+
+    si5351_synth_parameters_t plla = {0};
+    si5351_synth_parameters_t pllb = {0};
+    si5351_synth_parameters_t ms0 = {0};
+    si5351_synth_parameters_t ms1 = {0};
+    ESP_RETURN_ON_ERROR(calculate_parameters(plla_hz, device->reference_hz,
+                                              15U, 90U, &plla),
+                        TAG, "cannot calculate loopback source PLLA");
+    ESP_RETURN_ON_ERROR(calculate_parameters(pllb_hz, device->reference_hz,
+                                              15U, 90U, &pllb),
+                        TAG, "cannot calculate loopback RX PLLB");
+    ESP_RETURN_ON_ERROR(calculate_parameters(plla_hz, source_frequency_hz,
+                                              8U, 1800U, &ms0),
+                        TAG, "cannot calculate loopback source MS0");
+    ESP_RETURN_ON_ERROR(calculate_parameters(pllb_hz,
+                                              (uint64_t)rx_frequency_hz * 4ULL,
+                                              8U, 1800U, &ms1),
+                        TAG, "cannot calculate loopback RX MS1");
+    ESP_RETURN_ON_FALSE(ms0.a == 112U && ms0.b == 0U &&
+                            ms1.a == 28U && ms1.b == 0U,
+                        ESP_ERR_INVALID_STATE, TAG,
+                        "loopback plan did not produce integer dividers");
+
+    uint8_t plla_registers[8];
+    uint8_t pllb_registers[8];
+    uint8_t ms0_registers[8];
+    uint8_t ms1_registers[8];
+    encode_parameters(&plla, plla_registers);
+    encode_parameters(&pllb, pllb_registers);
+    encode_parameters(&ms0, ms0_registers);
+    encode_parameters(&ms1, ms1_registers);
+
+    if (device->reference_hz == 26000000U && rx_frequency_hz == 7074000U &&
+        (source_frequency_hz == 7075000U || source_frequency_hz == 7076000U)) {
+        // AN619 equations at the nominal 26 MHz reference:
+        // PLLB=26 MHz*(30+768/1625)=792.288 MHz; MS1=28.
+        // PLLA=26 MHz*(30+31/65)=792.400 MHz for +1 kHz, or
+        // PLLA=26 MHz*(30+782/1625)=792.512 MHz for +2 kHz; MS0=112.
+        static const uint8_t expected_plla_1khz[8] = {
+            0x00U, 0x41U, 0x00U, 0x0DU, 0x3DU, 0x00U, 0x00U, 0x03U,
+        };
+        static const uint8_t expected_plla_2khz[8] = {
+            0x06U, 0x59U, 0x00U, 0x0DU, 0x3DU, 0x00U, 0x03U, 0xCBU,
+        };
+        static const uint8_t expected_pllb[8] = {
+            0x06U, 0x59U, 0x00U, 0x0DU, 0x3CU, 0x00U, 0x03U, 0x24U,
+        };
+        static const uint8_t expected_ms0[8] = {
+            0x00U, 0x01U, 0x00U, 0x36U, 0x00U, 0x00U, 0x00U, 0x00U,
+        };
+        static const uint8_t expected_ms1[8] = {
+            0x00U, 0x01U, 0x00U, 0x0CU, 0x00U, 0x00U, 0x00U, 0x00U,
+        };
+        const uint8_t *expected_plla = source_frequency_hz == 7075000U
+                                          ? expected_plla_1khz
+                                          : expected_plla_2khz;
+        ESP_RETURN_ON_FALSE(memcmp(plla_registers, expected_plla, 8U) == 0 &&
+                                memcmp(pllb_registers, expected_pllb, 8U) == 0 &&
+                                memcmp(ms0_registers, expected_ms0, 8U) == 0 &&
+                                memcmp(ms1_registers, expected_ms1, 8U) == 0,
+                            ESP_ERR_INVALID_STATE, TAG,
+                            "RX loopback register-vector regression");
+        ESP_LOGI(TAG, "RX loopback nominal 26 MHz register vectors match");
+    }
+
+    ESP_LOGI(TAG,
+             "loopback plan: RX=%" PRIu32 " Hz, source CLK0=%" PRIu32
+             " Hz, QSD CLK1=%" PRIu32 " Hz, PLLA=%" PRIu64
+             " Hz, PLLB=%" PRIu64 " Hz",
+             rx_frequency_hz, source_frequency_hz, rx_frequency_hz * 4U,
+             plla_hz, pllb_hz);
+    ESP_RETURN_ON_ERROR(prepare_device(device, verify), TAG,
+                        "loopback device preparation failed");
+
+    uint8_t spread_spectrum = 0U;
+    ESP_RETURN_ON_ERROR(si5351_read_register(device,
+                                              SI5351_REG_SPREAD_SPECTRUM,
+                                              &spread_spectrum),
+                        TAG, "cannot read loopback spread-spectrum control");
+    spread_spectrum &= (uint8_t)~SI5351_SPREAD_SPECTRUM_ENABLE;
+    ESP_RETURN_ON_ERROR(write_byte_checked(device,
+                                            SI5351_REG_SPREAD_SPECTRUM,
+                                            spread_spectrum, verify),
+                        TAG, "cannot disable loopback spread spectrum");
+    static const uint8_t cleared_phases[2] = {0x00U, 0x00U};
+    ESP_RETURN_ON_ERROR(write_checked(device, SI5351_REG_CLK0_PHASE,
+                                       cleared_phases, sizeof(cleared_phases),
+                                       verify),
+                        TAG, "cannot clear CLK0/CLK1 phase offsets");
+    ESP_RETURN_ON_ERROR(write_checked(device, SI5351_REG_PLLA_PARAMETERS,
+                                       plla_registers, sizeof(plla_registers),
+                                       verify),
+                        TAG, "loopback PLLA programming failed");
+    ESP_RETURN_ON_ERROR(write_checked(device, SI5351_REG_PLLB_PARAMETERS,
+                                       pllb_registers, sizeof(pllb_registers),
+                                       verify),
+                        TAG, "loopback PLLB programming failed");
+    ESP_RETURN_ON_ERROR(write_checked(device, SI5351_REG_MS0_PARAMETERS,
+                                       ms0_registers, sizeof(ms0_registers),
+                                       verify),
+                        TAG, "loopback MS0 programming failed");
+    ESP_RETURN_ON_ERROR(write_checked(device, SI5351_REG_MS1_PARAMETERS,
+                                       ms1_registers, sizeof(ms1_registers),
+                                       verify),
+                        TAG, "loopback MS1 programming failed");
+    ESP_RETURN_ON_ERROR(write_byte_checked(device, SI5351_REG_CLK0_CONTROL,
+                                            SI5351_CLOCK_INTEGER_PLLA, verify),
+                        TAG, "loopback CLK0 control programming failed");
+    ESP_RETURN_ON_ERROR(write_byte_checked(device, SI5351_REG_CLK1_CONTROL,
+                                            SI5351_CLOCK_INTEGER_PLLB, verify),
+                        TAG, "loopback CLK1 control programming failed");
+    ESP_RETURN_ON_ERROR(reset_plls(device, verify), TAG,
+                        "loopback PLL reset failed");
+    ESP_RETURN_ON_ERROR(wait_status_stably_clear(
+                            device,
+                            SI5351_STATUS_SYS_INIT |
+                                SI5351_STATUS_LOS_XTAL |
+                                SI5351_STATUS_LOL_A |
+                                SI5351_STATUS_LOL_B,
+                            1000U, 3U),
+                        TAG, "loopback PLLs did not lock");
+
+    // The caller must explicitly opt into source-on; no PA/GPIO control here.
+    return si5351_set_enabled_outputs(device, SI5351_OUTPUT_CLK1, verify);
+}
+
+esp_err_t si5351_configure_rx_loopback(si5351_t *device,
+                                       uint32_t rx_frequency_hz,
+                                       uint32_t source_frequency_hz,
+                                       bool verify)
+{
+    ESP_RETURN_ON_FALSE(device != NULL && device->i2c_device != NULL,
+                        ESP_ERR_INVALID_ARG, TAG, "device is not initialized");
+
+    // Disable any previous source before calculations or initialization waits.
+    // Keep one cleanup path even if a write succeeded and only readback failed.
+    esp_err_t error = si5351_set_enabled_outputs(device, 0U, verify);
+    if (error == ESP_OK) {
+        error = configure_rx_loopback(device, rx_frequency_hz,
+                                       source_frequency_hz, verify);
+    }
+    if (error != ESP_OK) {
+        const esp_err_t disable_error = si5351_set_enabled_outputs(device, 0U,
+                                                                   false);
+        if (disable_error != ESP_OK) {
+            ESP_LOGE(TAG, "loopback cleanup could not disable outputs: %s",
+                     esp_err_to_name(disable_error));
+        }
+    }
+    return error;
+}
+
 esp_err_t si5351_configure_clk0_carrier(si5351_t *device,
                                         uint32_t frequency_hz, bool verify)
 {

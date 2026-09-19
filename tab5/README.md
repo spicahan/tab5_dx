@@ -5,31 +5,86 @@ real Si5351A and PCM1808 from the M5Stack Tab5. It is a UART-only bring-up
 program with no GUI, M5GFX, M5Unified, Wi-Fi, or other managed-component
 dependency.
 
+## RX leakage loopback (BS170s absent)
+
+The final `TAB5 DX RF V1.11 CIRCUIT SCHEMATIC.pdf` supplied by Barb separates
+the 74ACT244 output/TP8/BS170 gate net from TP7/common drains. With all three
+BS170s absent, the intended PA connection is missing; only uncontrolled stray
+coupling is available. G47 HIGH connects the RF node through C30 and Q1 to
+TP5/RX_IN, then C25, the QSD, I/Q amplifiers and AC-coupled ADC inputs.
+G47 LOW disconnects that RF input path. It is not a direct CLK0-to-ADC wire.
+
+**Keep every BS170 absent and the antenna disconnected. Do not jumper TP8
+to TP5 or the ADC.** This firmware is not safe for a populated PA: it keeps
+RX selected while a test clock is active, has no LPF interlock, and restarts
+the sequence automatically on boot. Power down and replace it before fitting
+PA transistors. An LPF and dummy load alone do not make simultaneous PA/RX
+operation safe or validate this test's coupling level.
+
+```sh
+source ~/esp/esp-idf/export.sh
+cd ~/tab5_dx/tab5
+idf.py -B build-loopback -D SDKCONFIG=sdkconfig.loopback \
+  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.loopback.defaults' build
+idf.py -B build-loopback -p /dev/cu.usbmodem101 flash
+cd ..
+python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 25 --rf-clocks loopback --startup-ms 1000
+```
+
+G48/G47 remain HIGH throughout. The QSD runs at 28.296 MHz for an effective
+7.074 MHz RX frequency. The source sequence is CLK0 OFF, 7.075 MHz ON, OFF,
+7.076 MHz ON, then 7.075 MHz ON held for scope probing. Each step drains
+one second of ADC samples before measuring a one-second window. It logs
+AC RMS, mean, extrema, exact full-scale rail hits and coherent 1/2 kHz
+amplitudes/relative phase. The final source is a nominal 1 kHz beat. Regular
+continuous I2S statistics then resume with a one-second startup discard.
+
+Compare the target bin against both OFF measurements and check whether the
+response shifts from 1 to 2 kHz with CLK0. Phase is meaningful only when a
+tone is clearly above noise. No measured leakage level, quadrature accuracy,
+RF sensitivity or coupling route is guaranteed by merely completing the test;
+internal clock/digital feedthrough can also produce a response. Absence of
+full-scale ADC codes does not rule out earlier analog clipping.
+
+Scope TP5 for leaked 7.075 MHz RF; TP10/TP11 are the schematic's I/Q amplifier
+outputs where a 1 kHz tone may be easier to see (they carry DC bias, so start
+with a high-impedance x10 probe and use AC coupling to inspect small AC).
+Use a short ground connection. TP8 is the much stronger buffer/gate-drive
+node, not the RX input. Do not interpret a large TP8 signal as successful RX.
+
+After the project-directory rename, old CMake caches still reference
+`tab5_dxft8`. This profile deliberately uses a fresh `build-loopback` directory;
+old builds and historical evidence are preserved. For other profiles, use
+a fresh `-B` directory if the existing cache still points to the old path.
+
 ## Persistent I2S diagnostic for the real RF board
 
 Use this profile for manual scope measurements, with BS170s still absent.
 Unlike the CLK0 scope profile (which disables I2S), it keeps the three I2S
 clocks and RF-board power on continuously. G48 and G47 stay HIGH. The current
-comparison-2 profile retains CLK1/QSD at 28.296 MHz (the original 7.074 MHz RX
-test plan); CLK0 and other outputs stay disabled. Startup discard is now
-250 ms (12,000 frames), down from comparison 1's 1,000 ms (48,000 frames).
-I2S clocking, format and one-second statistics windows are unchanged.
+profile retains CLK1/QSD at 28.296 MHz (the original 7.074 MHz RX test plan);
+CLK0 and other outputs stay disabled. Startup discard is 1,000 ms (48,000
+frames), restoring the successful comparison-1 setting after the
+[250 ms comparison](../validation/2026-09-18-i2s-250ms-comparison.md)
+reproduced the original premature short-capture failure. I2S clocking,
+format and one-second statistics windows are unchanged.
 
 ```sh
 source ~/esp/esp-idf/export.sh
-cd ~/tab5_dxft8/tab5
+cd ~/tab5_dx/tab5
 idf.py -B build-i2s-diag -D SDKCONFIG=sdkconfig.i2s-diag \
   -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.i2s-diag.defaults' build
 idf.py -B build-i2s-diag -p /dev/cu.usbmodem101 flash
 cd ..
-python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 10 --rf-clocks rx --startup-ms 250
+python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 10 --rf-clocks rx --startup-ms 1000
 ```
 
 `DXFT8_I2S_DIAGNOSTIC_RX_CLOCK` controls CLK1. The separate
 `DXFT8_I2S_DIAGNOSTIC_STARTUP_MS` selects startup discard (0..5000 ms).
-To restore comparison 1, set startup to 1000 in
-`idf.py -B build-i2s-diag menuconfig`, rebuild/flash, and pass `--startup-ms 1000`
-to the runner. For the original all-Si5351-outputs-off baseline, also disable
+If a local configuration still has the comparison-2 setting, set startup to
+1000 in `idf.py -B build-i2s-diag menuconfig` before rebuilding/flashing.
+To reproduce the historical comparison only, set 250 and pass `--startup-ms 250`
+to the runner. For the original all-Si5351-outputs-off baseline, disable
 the RX-clock option and pass `--rf-clocks off`. The runner verifies the
 requested RF-clock state and startup frame count at 48 kHz. Existing local
 sdkconfig settings override defaults.
@@ -85,7 +140,7 @@ This separate configuration leaves the default mock build intact:
 
 ```sh
 source ~/esp/esp-idf/export.sh
-cd ~/tab5_dxft8/tab5
+cd ~/tab5_dx/tab5
 idf.py -B build-scope -D SDKCONFIG=sdkconfig.scope \
   -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.scope.defaults' build
 idf.py -B build-scope -p /dev/cu.usbmodem101 flash
@@ -96,16 +151,18 @@ python tools/scope_validate.py --tab5 /dev/cu.usbmodem101 --runs 3 --i2c-only
 The scope build first sets G48 LOW and G47 HIGH, then enables G48 and waits
 200 ms for startup. It runs the existing Si5351 readback/lock checks with the
 7.074 MHz RX clock plan. The current scope profile explicitly disables I2S:
-the first powered PCM1808 test returned constant -1 on both channels, so ADC
-validation remains unresolved and is not claimed by this test. On success it
+the first powered PCM1808 test returned constant -1 on both channels with its
+old 250 ms discard. Later I2S diagnostics reproduced that early flat interval;
+this independent scope profile still does not claim an ADC pass. On success it
 disables Si5351 outputs during reprogramming and leaves **CLK0 only** enabled
 at nominal 14,075,000 Hz. G47 stays HIGH throughout; no TX selection occurs.
 
 To investigate the ADC later, use `idf.py -B build-scope menuconfig` to enable
 `DXFT8_RUN_I2S_SELF_TEST` with `DXFT8_I2S_CAPTURE_STATS`, rebuild/flash, and run
-the runner without `--i2c-only`. That build captures 4,800 frames after 12,000
-startup frames and requires a varying, correctly padded sample stream before
-enabling the carrier. Existing local sdkconfig settings override defaults;
+the runner without `--i2c-only`. That build captures 4,800 frames after one
+second of startup discard (48,000 frames at 48 kHz) and requires a varying,
+correctly padded sample stream before enabling the carrier. Existing local
+sdkconfig settings override defaults;
 use menuconfig to disable I2S when switching back to the independent CLK0 test.
 
 The carrier helper uses PLLA = 788.2 MHz and integer MS0 = 56 with a nominal
@@ -166,7 +223,7 @@ pull-ups disabled.
 
 ```sh
 source ~/esp/esp-idf/export.sh
-cd ~/tab5_dxft8/tab5
+cd ~/tab5_dx/tab5
 idf.py set-target esp32p4
 idf.py build
 idf.py -p /dev/cu.usbmodem101 flash monitor
@@ -176,7 +233,7 @@ After flashing both boards, close serial monitors and run the automated
 capture from the repository root:
 
 ```sh
-cd ~/tab5_dxft8
+cd ~/tab5_dx
 python tools/bench_validate.py --mock /dev/cu.usbmodem5A7A0113341 --tab5 /dev/cu.usbmodem101 --runs 3
 ```
 
@@ -231,8 +288,9 @@ correctly reject ordinary audio. For a real RF board, select
 `CONFIG_DXFT8_I2S_CAPTURE_STATS` in `idf.py menuconfig`. That mode receives
 normal PCM1808 data, converts the left-aligned words to signed 24-bit samples,
 and reports left/right minimum, maximum, mean, and padding errors without
-assuming an audio waveform. It first discards 12,000 frames so the PCM1808's
-post-clock digital-filter mute interval cannot be mistaken for valid silence.
+assuming an audio waveform. It first drains and discards one second of frames
+(48,000 at 48 kHz) to avoid the startup interval observed in the real-board
+comparison. This bench-tested margin is not a universal analog-settling guarantee.
 It rejects constant channels and nonzero padding, but it is only a digital-link
 sanity check—not a measurement of RX gain, noise, or analog performance.
 

@@ -1,10 +1,13 @@
 build/
 build-scope/
 build-i2s-diag/
+build-loopback/
 sdkconfig
 sdkconfig.old
 sdkconfig.scope
 sdkconfig.scope.old
 sdkconfig.i2s-diag
 sdkconfig.i2s-diag.old
+sdkconfig.loopback
+sdkconfig.loopback.old
 managed_components/

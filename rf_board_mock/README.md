@@ -137,7 +137,7 @@ the clock bundle with nearby ground conductors.
 
 ```sh
 source ~/esp/esp-idf/export.sh
-cd ~/tab5_dxft8/rf_board_mock
+cd ~/tab5_dx/rf_board_mock
 idf.py set-target esp32s3
 idf.py build
 ```
@@ -165,7 +165,7 @@ After flashing both boards, close their serial monitors and run this from the
 repository root to reset the mock once and the Tab5 for each of three runs:
 
 ```sh
-cd ~/tab5_dxft8
+cd ~/tab5_dx
 python tools/bench_validate.py --mock /dev/cu.usbmodem5A7A0113341 --tab5 /dev/cu.usbmodem101 --runs 3
 ```
 

@@ -13,6 +13,7 @@
 #include "sdkconfig.h"
 
 #include "pcm1808_i2s.h"
+#include "rf_loopback.h"
 #include "si5351.h"
 
 #if CONFIG_DXFT8_TAB5_I2C_INTERNAL_PULLUPS
@@ -137,6 +138,64 @@ static void stop_on_failure(si5351_t *clock, const char *stage, esp_err_t error)
         vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
+
+#if CONFIG_DXFT8_RX_LOOPBACK_BENCH
+static esp_err_t run_rx_loopback(si5351_t *clock, pcm1808_i2s_t *adc)
+{
+    // Deliberately RX-selected even while CLK0 runs: G47 LOW would disconnect
+    // the receiver. Safe only with the PA BS170s physically absent.
+    if (adc->sample_rate_hz != 48000U ||
+        CONFIG_DXFT8_I2S_DIAGNOSTIC_STARTUP_MS != 1000) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    static const struct {
+        const char *label;
+        uint32_t source_hz;
+        bool source_on;
+    } steps[] = {
+        {"OFF_BEFORE", TEST_RF_HZ + 1000U, false},
+        {"ON_1KHZ", TEST_RF_HZ + 1000U, true},
+        {"OFF_AFTER", TEST_RF_HZ + 1000U, false},
+        {"ON_2KHZ", TEST_RF_HZ + 2000U, true},
+        {"HOLD_1KHZ", TEST_RF_HZ + 1000U, true},
+    };
+    esp_err_t error = gpio_set_level(RF_RXSW_GPIO, 1);
+    if (error != ESP_OK) {
+        return error;
+    }
+    ESP_LOGW(TAG, "RX LOOPBACK BENCH: BS170s MUST be absent; no antenna; "
+                  "G48=HIGH, G47=HIGH; one-second drain before each measurement");
+    uint32_t configured_source_hz = 0U;
+    for (size_t step = 0; step < sizeof(steps) / sizeof(steps[0]); ++step) {
+        if (steps[step].source_hz != configured_source_hz) {
+            error = si5351_configure_rx_loopback(clock, TEST_RF_HZ,
+                                                 steps[step].source_hz, true);
+            if (error != ESP_OK) {
+                return error;
+            }
+            configured_source_hz = steps[step].source_hz;
+        }
+        const uint8_t outputs = SI5351_OUTPUT_CLK1 |
+            (steps[step].source_on ? SI5351_OUTPUT_CLK0 : 0U);
+        error = si5351_set_enabled_outputs(clock, outputs, true);
+        if (error != ESP_OK) {
+            return error;
+        }
+        ESP_LOGI(TAG, "LOOPBACK STATE %s: CLK0=%" PRIu32 " Hz %s; "
+                     "CLK1=28296000 Hz; RX=7074000 Hz; G47=HIGH",
+                 steps[step].label, steps[step].source_hz,
+                 steps[step].source_on ? "ON" : "OFF");
+        error = rf_loopback_measure(adc, steps[step].label, 1000U);
+        if (error != ESP_OK) {
+            return error;
+        }
+    }
+    ESP_LOGW(TAG, "RX LOOPBACK HOLD: CLK0=7075000 Hz; CLK1=28296000 Hz; "
+                  "expected beat=1000 Hz; G48=HIGH, G47=HIGH; "
+                  "I2S remains active; BS170s MUST remain absent");
+    return ESP_OK;
+}
+#endif
 
 void app_main(void)
 {
@@ -304,6 +363,16 @@ void app_main(void)
     }
 
 #if CONFIG_DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+#if CONFIG_DXFT8_RX_LOOPBACK_BENCH
+    error = run_rx_loopback(&clock, &adc);
+    if (error != ESP_OK) {
+        // Turn the source off before I2S teardown; stop_on_failure also requests
+        // all clocks off and RF power off if the first cleanup write fails.
+        (void)si5351_set_enabled_outputs(&clock, 0U, false);
+        (void)pcm1808_i2s_deinit(&adc);
+        stop_on_failure(&clock, "RX leakage loopback", error);
+    }
+#endif
     ESP_LOGI(TAG, "I2S DIAGNOSTIC ACTIVE: clocks remain on for probing; "
                   "flat data is reported, not treated as an ADC pass");
     error = pcm1808_i2s_run_diagnostics(&adc,

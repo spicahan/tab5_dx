@@ -19,7 +19,6 @@
 #define PCM1808_READ_TIMEOUT_MS         1000U
 #define PCM1808_SYNC_SEARCH_FRAMES      2048U
 #define PCM1808_MOCK_DISCARD_FRAMES    4800U
-#define PCM1808_STARTUP_DISCARD_FRAMES  12000U
 
 static const char *TAG = "pcm1808_i2s";
 
@@ -300,7 +299,7 @@ esp_err_t pcm1808_i2s_capture_stats(pcm1808_i2s_t *device,
                                     pcm1808_capture_stats_t *stats)
 {
     ESP_RETURN_ON_FALSE(device != NULL && stats != NULL &&
-                            frames_to_capture > 0U,
+                            frames_to_capture > 0U && device->sample_rate_hz > 0U,
                         ESP_ERR_INVALID_ARG, TAG, "invalid capture request");
 
     uint32_t *buffer = malloc(PCM1808_RX_BUFFER_WORDS * sizeof(uint32_t));
@@ -316,11 +315,12 @@ esp_err_t pcm1808_i2s_capture_stats(pcm1808_i2s_t *device,
     int64_t left_sum = 0;
     int64_t right_sum = 0;
 
-    // PCM1808 DOUT remains muted while its digital filters settle after SCKI
-    // starts. Discard 12,000 complete frames (> the specified 8,960/Fs
-    // startup interval) so a short capture cannot report a false all-zero
-    // success from the reset/mute interval.
-    size_t startup_remaining = PCM1808_STARTUP_DISCARD_FRAMES;
+    // The real-board 250 ms comparison still produced a constant -1 stream
+    // through the following 100 ms. Drain one second of frames while clocks
+    // run, matching the successful diagnostic startup setting. This is a
+    // tested bench margin, not a guarantee of analog settling in all conditions.
+    const size_t startup_frames = device->sample_rate_hz;
+    size_t startup_remaining = startup_frames;
     while (startup_remaining > 0U) {
         const size_t requested = startup_remaining < PCM1808_RX_DMA_FRAMES
                                      ? startup_remaining
@@ -335,7 +335,7 @@ esp_err_t pcm1808_i2s_capture_stats(pcm1808_i2s_t *device,
         startup_remaining -= received;
     }
     ESP_LOGI(TAG, "discarded %u PCM1808 startup/mute frames",
-             (unsigned)PCM1808_STARTUP_DISCARD_FRAMES);
+             (unsigned)startup_frames);
 
     while (local.frames_captured < frames_to_capture) {
         const size_t remaining = frames_to_capture - local.frames_captured;
