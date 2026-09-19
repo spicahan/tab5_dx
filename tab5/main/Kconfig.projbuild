@@ -11,6 +11,7 @@ config DXFT8_REAL_RF_BOARD
 config DXFT8_SCOPE_CLK0_CARRIER
     bool "Leave CLK0 at 14.075 MHz after successful checks (BS170s absent only)"
     depends on DXFT8_REAL_RF_BOARD
+    depends on !DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
     default n
     help
         Explicit scope-only mode: requires the BS170s to remain uninstalled.
@@ -147,6 +148,17 @@ config DXFT8_I2S_MOCK_PATTERN_TEST
 
 config DXFT8_I2S_CAPTURE_STATS
     bool "Capture and summarize real PCM1808 samples"
+
+config DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+    bool "Continuous real-board I2S scope diagnostic (keeps clocks/power on)"
+    depends on DXFT8_REAL_RF_BOARD
+    help
+        Disable all Si5351 outputs and continuously receive the PCM1808 while
+        keeping G48 high and G47 high. Allow one second for startup, then log
+        raw samples and one-second statistics. Flat samples and padding errors
+        are reported without switching off the clocks needed for probing.
+        Actual I2S API/read errors remain fatal. Bench use only with BS170s
+        absent; reset or remove power to stop. This is not an ADC pass/fail test.
 
 endchoice
 

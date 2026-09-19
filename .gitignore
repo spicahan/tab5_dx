@@ -1,7 +1,10 @@
 build/
 build-scope/
+build-i2s-diag/
 sdkconfig
 sdkconfig.old
 sdkconfig.scope
 sdkconfig.scope.old
+sdkconfig.i2s-diag
+sdkconfig.i2s-diag.old
 managed_components/

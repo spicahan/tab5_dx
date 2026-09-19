@@ -5,6 +5,50 @@ real Si5351A and PCM1808 from the M5Stack Tab5. It is a UART-only bring-up
 program with no GUI, M5GFX, M5Unified, Wi-Fi, or other managed-component
 dependency.
 
+## Persistent I2S diagnostic for the real RF board
+
+Use this profile for manual scope measurements, with BS170s still absent.
+Unlike the CLK0 scope profile (which disables I2S), it keeps the three I2S
+clocks and RF-board power on continuously. G48 and G47 stay HIGH. After the
+initial Si5351 self-test, all Si5351 outputs are disabled, including CLK0.
+
+```sh
+source ~/esp/esp-idf/export.sh
+cd ~/tab5_dxft8/tab5
+idf.py -B build-i2s-diag -D SDKCONFIG=sdkconfig.i2s-diag \
+  -D 'SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.i2s-diag.defaults' build
+idf.py -B build-i2s-diag -p /dev/cu.usbmodem101 flash
+cd ..
+python tools/i2s_diagnostic.py --tab5 /dev/cu.usbmodem101 --seconds 10
+```
+
+The ADC diagnostic discards one second at startup, then continuously receives
+one-second windows. It logs raw 32-bit first/last samples, signed 24-bit
+minimum/maximum/mean, nonzero low padding bytes, and consecutive-word changes
+for each channel. A short raw dump from the first window helps inspect framing.
+Flat samples and padding anomalies produce warnings without shutting down
+power or clocks. Actual API/transport failures still stop the test and request
+power off. A running harness is **not** a passing ADC or analog-path test.
+No clock frequency or amplitude is physically measured by these UART logs.
+
+Probe with x10, high-impedance probes and a short board-ground connection:
+
+| Signal | Tab5 | PCM1808 pin | Nominal frequency | Suggested starting timebase |
+| --- | --- | --- | --- | --- |
+| SCKI/MCLK | G16 | 6 | 12.288 MHz | 100 ns/div |
+| BCK | G45 | 8 | 3.072 MHz | 500 ns/div |
+| LRCK | G3 | 7 | 48 kHz | 5 us/div |
+| DOUT | G4 | 9 | Data, not a periodic clock | Compare with BCK/LRCK |
+
+Begin with one clock at a time; DC coupling, about 1 V/div and a rising-edge
+trigger near 1.5 V are useful starting settings. Verify the signal at the
+ADC-side pad as well as the M5-Bus. Two scope channels suffice for pairwise
+comparisons. The scope's sample-rate rating is not its analog bandwidth.
+
+The diagnostic repeats after reset and leaves power on when the serial
+capture closes. Power off to stop it, or flash another profile. This is a
+temporary bench mode, not a production shutdown or LPF/TX safety system.
+
 ## Real RF board: 14.075 MHz CLK0 scope test
 
 **Use this profile only with the BS170s uninstalled.** It is not transmit

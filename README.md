@@ -7,6 +7,12 @@ This repository keeps the two sides of the bench setup separate:
 - `tab5/` runs on the M5Stack Tab5 and contains reusable Si5351 and PCM1808
   host drivers plus UART-only integration tests.
 
+For live ADC troubleshooting, use the
+[persistent I2S diagnostic profile](tab5/README.md#persistent-i2s-diagnostic-for-the-real-rf-board).
+It leaves RF power and I2S clocks enabled, with Si5351 outputs off. The first
+diagnostic capture showed varying left/right samples with zero padding errors;
+see the [diagnostic record](validation/2026-09-18-i2s.md).
+
 For the real RF daughter board's BS170s-absent 14.075 MHz scope test, use the
 [separate real-board profile](tab5/README.md#real-rf-board-14075-mhz-clk0-scope-test).
 It enables G48 power, holds G47 in RX and programs CLK0. The current scope

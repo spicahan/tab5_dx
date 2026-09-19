@@ -260,6 +260,15 @@ void app_main(void)
 
     ESP_LOGI(TAG, "SI5351 SELF-TEST PASS");
 
+#if CONFIG_DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+    error = set_frontend_clock_state(&clock, FRONTEND_CLOCKS_OFF, true);
+    if (error != ESP_OK) {
+        stop_on_failure(&clock, "disable RF clocks for ADC diagnostic", error);
+    }
+    ESP_LOGW(TAG, "CONTINUOUS I2S BENCH MODE: Si5351 outputs OFF; "
+                  "G48=HIGH, G47=HIGH; BS170s must remain absent");
+#endif
+
 #if CONFIG_DXFT8_RUN_I2S_SELF_TEST
     ESP_LOGI(TAG, "starting PCM1808-compatible I2S validation");
     const pcm1808_i2s_config_t adc_config = {
@@ -285,7 +294,20 @@ void app_main(void)
         stop_on_failure(&clock, "I2S clock/RX start", error);
     }
 
-#if CONFIG_DXFT8_I2S_MOCK_PATTERN_TEST
+#if CONFIG_DXFT8_I2S_CONTINUOUS_DIAGNOSTIC
+    ESP_LOGI(TAG, "I2S DIAGNOSTIC ACTIVE: clocks remain on for probing; "
+                  "flat data is reported, not treated as an ADC pass");
+    error = pcm1808_i2s_run_diagnostics(&adc);
+    // The continuous diagnostic returns only on a transport/API failure.
+    // Keep ordinary fail-closed handling for that failure, not sample quality.
+    const esp_err_t cleanup_error = pcm1808_i2s_deinit(&adc);
+    if (cleanup_error != ESP_OK) {
+        ESP_LOGE(TAG, "I2S cleanup also failed: %s",
+                 esp_err_to_name(cleanup_error));
+    }
+    stop_on_failure(&clock, "continuous I2S transport",
+                    error == ESP_OK ? ESP_ERR_INVALID_STATE : error);
+#elif CONFIG_DXFT8_I2S_MOCK_PATTERN_TEST
     pcm1808_mock_test_result_t mock_result = {0};
     error = pcm1808_i2s_validate_mock(&adc,
                                       CONFIG_DXFT8_I2S_TEST_FRAMES,

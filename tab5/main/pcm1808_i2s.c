@@ -414,6 +414,147 @@ esp_err_t pcm1808_i2s_capture_stats(pcm1808_i2s_t *device,
     return ESP_OK;
 }
 
+esp_err_t pcm1808_i2s_run_diagnostics(pcm1808_i2s_t *device)
+{
+    ESP_RETURN_ON_FALSE(device != NULL && device->rx_channel != NULL &&
+                            device->enabled && device->sample_rate_hz > 0U,
+                        ESP_ERR_INVALID_ARG, TAG,
+                        "diagnostics require an enabled RX channel and sample rate");
+
+    uint32_t *buffer = malloc(PCM1808_RX_BUFFER_WORDS * sizeof(uint32_t));
+    ESP_RETURN_ON_FALSE(buffer != NULL, ESP_ERR_NO_MEM, TAG,
+                        "allocate diagnostic receive buffer");
+
+    ESP_LOGI(TAG,
+             "I2S DIAGNOSTIC RUNNING: clocks remain enabled; settling for one second; not an ADC PASS");
+    size_t startup_remaining = device->sample_rate_hz;
+    while (startup_remaining > 0U) {
+        const size_t requested = startup_remaining < PCM1808_RX_DMA_FRAMES
+                                     ? startup_remaining
+                                     : PCM1808_RX_DMA_FRAMES;
+        size_t received = 0U;
+        const esp_err_t error = read_required_frames(device, buffer, requested,
+                                                      &received);
+        if (error != ESP_OK) {
+            free(buffer);
+            return error;
+        }
+        startup_remaining -= received;
+    }
+    ESP_LOGI(TAG, "diagnostic startup discard: %" PRIu32 " frames",
+             device->sample_rate_hz);
+
+    uint64_t window = 0U;
+    for (;;) {
+        pcm1808_capture_stats_t stats = {
+            .left_min = INT32_MAX,
+            .left_max = INT32_MIN,
+            .right_min = INT32_MAX,
+            .right_max = INT32_MIN,
+        };
+        int64_t left_sum = 0;
+        int64_t right_sum = 0;
+        uint32_t first_left = 0U;
+        uint32_t first_right = 0U;
+        uint32_t last_left = 0U;
+        uint32_t last_right = 0U;
+        size_t left_changes = 0U;
+        size_t right_changes = 0U;
+        uint32_t initial_frames[8U * PCM1808_I2S_WORDS_PER_FRAME] = {0};
+        size_t initial_frame_count = 0U;
+
+        while (stats.frames_captured < device->sample_rate_hz) {
+            const size_t remaining = device->sample_rate_hz - stats.frames_captured;
+            const size_t requested = remaining < PCM1808_RX_DMA_FRAMES
+                                         ? remaining
+                                         : PCM1808_RX_DMA_FRAMES;
+            size_t received = 0U;
+            const esp_err_t error = read_required_frames(device, buffer, requested,
+                                                          &received);
+            if (error != ESP_OK) {
+                free(buffer);
+                return error;
+            }
+
+            for (size_t frame = 0U; frame < received; ++frame) {
+                const uint32_t left_word =
+                    buffer[frame * PCM1808_I2S_WORDS_PER_FRAME];
+                const uint32_t right_word =
+                    buffer[frame * PCM1808_I2S_WORDS_PER_FRAME + 1U];
+                const int32_t left = ((int32_t)left_word) >> 8;
+                const int32_t right = ((int32_t)right_word) >> 8;
+
+                if (stats.frames_captured == 0U) {
+                    first_left = left_word;
+                    first_right = right_word;
+                } else {
+                    left_changes += left_word != last_left;
+                    right_changes += right_word != last_right;
+                }
+                last_left = left_word;
+                last_right = right_word;
+
+                if (window == 0U && initial_frame_count < 8U) {
+                    initial_frames[initial_frame_count * PCM1808_I2S_WORDS_PER_FRAME] =
+                        left_word;
+                    initial_frames[initial_frame_count * PCM1808_I2S_WORDS_PER_FRAME + 1U] =
+                        right_word;
+                    ++initial_frame_count;
+                }
+                stats.nonzero_padding_words += (left_word & UINT32_C(0xFF)) != 0U;
+                stats.nonzero_padding_words += (right_word & UINT32_C(0xFF)) != 0U;
+                if (left < stats.left_min) {
+                    stats.left_min = left;
+                }
+                if (left > stats.left_max) {
+                    stats.left_max = left;
+                }
+                if (right < stats.right_min) {
+                    stats.right_min = right;
+                }
+                if (right > stats.right_max) {
+                    stats.right_max = right;
+                }
+                left_sum += left;
+                right_sum += right;
+                ++stats.frames_captured;
+            }
+        }
+
+        ++window;
+        stats.left_mean = left_sum / (int64_t)stats.frames_captured;
+        stats.right_mean = right_sum / (int64_t)stats.frames_captured;
+        ESP_LOGI(TAG,
+                 "I2S DIAG window=%" PRIu64 " frames=%u padding_nonzero=%u; raw first=%08" PRIX32
+                 "/%08" PRIX32 " last=%08" PRIX32 "/%08" PRIX32 " (L/R)",
+                 window, (unsigned)stats.frames_captured,
+                 (unsigned)stats.nonzero_padding_words,
+                 first_left, first_right, last_left, last_right);
+        ESP_LOGI(TAG,
+                 "signed24 L[min=%" PRId32 " max=%" PRId32 " mean=%" PRId64
+                 " changes=%u] R[min=%" PRId32 " max=%" PRId32 " mean=%" PRId64
+                 " changes=%u] (consecutive word changes)",
+                 stats.left_min, stats.left_max, stats.left_mean,
+                 (unsigned)left_changes,
+                 stats.right_min, stats.right_max, stats.right_mean,
+                 (unsigned)right_changes);
+        for (size_t frame = 0U; frame < initial_frame_count; ++frame) {
+            ESP_LOGI(TAG, "raw[%u] L=0x%08" PRIX32 " R=0x%08" PRIX32,
+                     (unsigned)frame,
+                     initial_frames[frame * PCM1808_I2S_WORDS_PER_FRAME],
+                     initial_frames[frame * PCM1808_I2S_WORDS_PER_FRAME + 1U]);
+        }
+        if (stats.left_min == stats.left_max || stats.right_min == stats.right_max ||
+            stats.nonzero_padding_words != 0U) {
+            ESP_LOGW(TAG,
+                     "diagnostic anomaly: flat L=%s R=%s, padding=%u; clocks stay ON, not ADC PASS",
+                     stats.left_min == stats.left_max ? "yes" : "no",
+                     stats.right_min == stats.right_max ? "yes" : "no",
+                     (unsigned)stats.nonzero_padding_words);
+        }
+    }
+}
+
 esp_err_t pcm1808_i2s_deinit(pcm1808_i2s_t *device)
 {
     if (device == NULL) {
